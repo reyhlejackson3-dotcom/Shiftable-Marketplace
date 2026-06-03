@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sellers — Shiftable</title>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style id="navStyles"></style>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;}
+.page-header{background:#0f172a;padding:1.75rem 2rem;color:#fff;}
+.page-header h1{font-family:'Space Grotesk',sans-serif;font-size:1.75rem;font-weight:700;margin-bottom:.25rem;}
+.page-header p{color:#94a3b8;font-size:.88rem;}
+.wrap{max-width:1100px;margin:0 auto;padding:2rem;}
+.search-bar{display:flex;gap:.5rem;margin-bottom:1.75rem;max-width:480px;}
+.search-bar input{flex:1;border:1.5px solid #e2e8f0;padding:.7rem 1rem;font-size:.9rem;outline:none;font-family:'Manrope',sans-serif;border-radius:12px;}
+.search-bar input:focus{border-color:#38bdf8;}
+.accounts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.1rem;}
+.acard{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;transition:box-shadow .25s,border-color .25s,transform .25s;text-decoration:none;}
+.acard:hover{box-shadow:0 10px 32px rgba(0,0,0,.1);border-color:#38bdf8;transform:translateY(-3px);}
+.acard-av{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0284c7);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'League Spartan',sans-serif;font-weight:800;font-size:1.6rem;margin-bottom:1rem;overflow:hidden;background-size:cover;background-position:center;}
+.acard-name{font-family:'Space Grotesk',sans-serif;font-size:1.05rem;font-weight:700;color:#0f172a;margin-bottom:.25rem;}
+.acard-desc{font-size:.8rem;color:#64748b;line-height:1.55;margin-bottom:.85rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.4em;}
+.acard-stats{display:flex;gap:1.25rem;font-size:.78rem;color:#475569;border-top:1px solid #f1f5f9;padding-top:.85rem;width:100%;justify-content:center;}
+.acard-stats b{font-family:'League Spartan',sans-serif;color:#0f172a;}
+.empty{text-align:center;padding:4rem;color:#64748b;grid-column:1/-1;}
+</style>
+</head>
+<body>
+<div id="navMount"></div>
+
+<div class="page-header">
+  <h1>Sellers on Shiftable</h1>
+  <p>Browse the builders selling AI systems, automations, and solutions</p>
+</div>
+
+<div class="wrap">
+  <div class="search-bar">
+    <input type="text" id="accSearch" placeholder="Search sellers by name..." oninput="renderAccounts()">
+  </div>
+  <div class="accounts-grid" id="accountsGrid"><div class="empty">Loading sellers...</div></div>
+</div>
+
+<script>
+let allAccounts = [];
+
+async function init() {
+  document.getElementById('navStyles').textContent = NAV_CSS;
+  const { data: { session } } = await sb.auth.getSession();
+  const user = session?.user || null;
+  const profile = user ? await getProfile(user.id) : null;
+  document.getElementById('navMount').innerHTML = buildNav(user, profile);
+  if (user) updateCartCount();
+
+  // Find sellers: profiles that are seller/both, OR that have at least one product.
+  // We pull seller-type profiles and sort by follower_count.
+  const { data: profiles } = await sb.from('profiles')
+    .select('id, full_name, display_name, account_description, photo_url, follower_count, account_type')
+    .or('account_type.eq.seller,account_type.eq.both');
+
+  // Also count their products so we can show it and exclude empty accounts if desired
+  const accounts = profiles || [];
+  // Fetch product counts per seller
+  const { data: prods } = await sb.from('products').select('seller_id').eq('status','approved');
+  const counts = {};
+  (prods || []).forEach(p => { counts[p.seller_id] = (counts[p.seller_id] || 0) + 1; });
+
+  allAccounts = accounts.map(a => ({
+    ...a,
+    name: a.display_name || a.full_name || 'Seller',
+    product_count: counts[a.id] || 0
+  })).sort((a,b) => (b.follower_count||0) - (a.follower_count||0));
+
+  renderAccounts();
+}
+
+function renderAccounts() {
+  const q = (document.getElementById('accSearch').value || '').toLowerCase();
+  const grid = document.getElementById('accountsGrid');
+  const list = allAccounts.filter(a => !q || a.name.toLowerCase().includes(q));
+  if (!list.length) { grid.innerHTML = `<div class="empty">No sellers found</div>`; return; }
+  grid.innerHTML = list.map(a => `
+    <a class="acard" href="profile.html?id=${a.id}">
+      <div class="acard-av" style="${a.photo_url ? `background-image:url(${a.photo_url})` : ''}">${a.photo_url ? '' : a.name.charAt(0).toUpperCase()}</div>
+      <div class="acard-name">${a.name}</div>
+      <div class="acard-desc">${a.account_description || 'AI builder on Shiftable'}</div>
+      <div class="acard-stats">
+        <span><b>${a.follower_count||0}</b> followers</span>
+        <span><b>${a.product_count}</b> products</span>
+      </div>
+    </a>
+  `).join('');
+}
+
+init();
+</script>
+</body>
+</html>

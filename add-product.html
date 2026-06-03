@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Product — Shiftable</title>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:.75rem 2rem;background:#0f172a;}
+.logo{text-decoration:none;display:flex;align-items:center;}
+.logo-shift{font-family:'League Spartan',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;}
+.logo-able{font-family:'League Spartan',sans-serif;font-size:1.5rem;font-weight:800;color:#38bdf8;}
+.logo-up{font-size:.9rem;color:#38bdf8;position:relative;top:-3px;margin-left:1px;}
+.back-btn{font-size:.82rem;color:#94a3b8;text-decoration:none;border:1.5px solid #334155;padding:.4rem .85rem;}
+.back-btn:hover{color:#fff;}
+
+.page-wrap{max-width:760px;margin:2.5rem auto;padding:0 2rem;}
+.page-header{margin-bottom:2rem;}
+.page-header h1{font-family:'League Spartan',sans-serif;font-size:2rem;font-weight:800;margin-bottom:.35rem;}
+.page-header p{font-size:.9rem;color:#64748b;}
+
+.req-banner{background:#f0f9ff;border:1.5px solid #bae6fd;padding:1rem 1.25rem;margin-bottom:2rem;}
+.req-banner h4{font-family:'League Spartan',sans-serif;font-size:.88rem;font-weight:700;color:#0284c7;margin-bottom:.35rem;}
+.req-banner ul{padding-left:1rem;}
+.req-banner li{font-size:.82rem;color:#0369a1;line-height:1.7;}
+
+.form-card{background:#fff;border:1px solid #e2e8f0;padding:2rem;}
+.form-section{margin-bottom:2rem;padding-bottom:2rem;border-bottom:1px solid #e2e8f0;}
+.form-section:last-child{border:none;margin-bottom:0;}
+.form-section h3{font-family:'League Spartan',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.25rem;}
+.field{margin-bottom:1.1rem;}
+.field label{display:block;font-size:.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;}
+.field label .req{color:#ef4444;margin-left:2px;}
+.field input,.field textarea,.field select{width:100%;border:1.5px solid #e2e8f0;padding:.65rem .9rem;font-size:.9rem;outline:none;font-family:'Manrope',sans-serif;color:#0f172a;transition:border-color .2s;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:#38bdf8;}
+.field input.invalid{border-color:#ef4444;}
+.field textarea{resize:vertical;min-height:100px;}
+.field-hint{font-size:.75rem;color:#94a3b8;margin-top:.3rem;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+@media(max-width:500px){.frow{grid-template-columns:1fr;}}
+
+/* PHOTO UPLOAD */
+.photo-upload{border:2px dashed #e2e8f0;padding:2rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.photo-upload:hover{border-color:#38bdf8;background:#f0f9ff;}
+.photo-upload.has-photo{border-style:solid;border-color:#38bdf8;padding:0;overflow:hidden;}
+.photo-upload input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.photo-upload-icon{width:40px;height:40px;margin:0 auto .75rem;color:#94a3b8;}
+.photo-upload-icon svg{width:100%;height:100%;}
+.photo-upload-text{font-size:.85rem;font-weight:600;color:#475569;margin-bottom:.25rem;}
+.photo-upload-hint{font-size:.75rem;color:#94a3b8;}
+.photo-preview{width:100%;height:200px;object-fit:cover;display:none;}
+.photo-preview.visible{display:block;}
+.photo-remove{position:absolute;top:.5rem;right:.5rem;background:#ef4444;color:#fff;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.85rem;display:none;z-index:2;}
+.photo-upload.has-photo .photo-remove{display:flex;align-items:center;justify-content:center;}
+
+/* FEATURES */
+.features-wrap{}
+.feature-row{display:flex;gap:.5rem;margin-bottom:.5rem;}
+.feature-row input{flex:1;border:1.5px solid #e2e8f0;padding:.5rem .75rem;font-size:.85rem;outline:none;font-family:'Manrope',sans-serif;transition:border-color .2s;}
+.feature-row input:focus{border-color:#38bdf8;}
+.feature-remove{background:#fef2f2;color:#ef4444;border:1px solid #fecaca;width:34px;cursor:pointer;font-size:.9rem;flex-shrink:0;}
+.add-feat-btn{background:transparent;color:#38bdf8;border:1.5px dashed #38bdf8;padding:.45rem 1rem;font-size:.8rem;cursor:pointer;width:100%;font-family:'Manrope',sans-serif;font-weight:600;margin-top:.35rem;transition:background .2s;}
+.add-feat-btn:hover{background:#f0f9ff;}
+
+/* CATEGORIES */
+.cat-checks{display:flex;flex-wrap:wrap;gap:.5rem;}
+.cat-check{display:flex;align-items:center;gap:.4rem;border:1.5px solid #e2e8f0;padding:.4rem .85rem;cursor:pointer;transition:all .2s;user-select:none;}
+.cat-check:has(input:checked){border-color:#38bdf8;background:#f0f9ff;color:#0284c7;}
+.cat-check input{accent-color:#38bdf8;}
+.cat-check span{font-size:.82rem;font-weight:500;}
+
+/* STRIPE CONNECT SECTION */
+.stripe-section{background:#f8fafc;border:1.5px solid #e2e8f0;padding:1.5rem;}
+.stripe-connected-badge{display:flex;align-items:center;gap:.5rem;font-size:.88rem;color:#16a34a;font-weight:600;margin-bottom:.75rem;}
+.stripe-not-connected{display:flex;align-items:center;gap:.5rem;font-size:.88rem;color:#dc2626;font-weight:600;margin-bottom:.75rem;}
+.stripe-connect-btn{background:#635bff;color:#fff;border:none;padding:.65rem 1.5rem;font-family:'Manrope',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;transition:background .2s;display:inline-flex;align-items:center;gap:.5rem;}
+.stripe-connect-btn:hover{background:#4f46e5;}
+
+/* PRICE PREVIEW */
+.price-preview{background:#f0f9ff;border:1px solid #bae6fd;padding:1rem;margin-top:.75rem;font-size:.85rem;color:#0369a1;}
+.price-preview strong{color:#0f172a;font-family:'League Spartan',sans-serif;}
+
+.submit-btn{width:100%;background:#38bdf8;color:#fff;border:none;padding:1rem;font-family:'Manrope',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:background .2s;margin-top:1.5rem;}
+.submit-btn:hover{background:#0ea5e9;}
+.submit-btn:disabled{background:#94a3b8;cursor:not-allowed;}
+.form-msg{font-size:.85rem;text-align:center;margin-top:.75rem;padding:.7rem;font-weight:500;display:none;}
+.form-msg.error{color:#dc2626;background:#fef2f2;}
+.form-msg.success{color:#16a34a;background:#f0fdf4;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="logo"><img src="logo.png" alt="Shiftable" style="height:36px;width:auto;"></a>
+  <a href="seller-dashboard.html" class="back-btn">← Dashboard</a>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <h1>Add a Product</h1>
+    <p>List your AI system on the Shiftable marketplace.</p>
+  </div>
+
+  <div class="req-banner">
+    <h4>Required to list</h4>
+    <ul>
+      <li>Product name and description</li>
+      <li>Product photo (uploaded by you)</li>
+      <li>Implementation fee (can be $0)</li>
+      <li>Stripe account connected</li>
+      <li>Formspree endpoint (so buyers can reach you)</li>
+    </ul>
+  </div>
+
+  <div class="form-card">
+
+    <!-- STRIPE + FORMSPREE -->
+    <div class="form-section">
+      <h3>Seller Setup</h3>
+      <div class="stripe-section" style="margin-bottom:1.25rem;">
+        <div id="stripeStatus" class="stripe-not-connected">✗ Stripe not connected</div>
+        <p style="font-size:.82rem;color:#64748b;margin-bottom:.85rem;">You must connect Stripe to receive payouts when your products sell.</p>
+        <button class="stripe-connect-btn" onclick="connectStripe()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/></svg>
+          Connect Stripe Account
+        </button>
+        <input type="hidden" id="stripeConnected" value="false">
+      </div>
+
+      <div class="field">
+        <label>Formspree Endpoint URL <span class="req">*</span></label>
+        <input type="url" id="sellerFormspree" placeholder="https://formspree.io/f/xxxxxxxx">
+        <div class="field-hint">Buyers will email you through this when they purchase. Get a free endpoint at formspree.io — create a new form for each product or one shared form for all your products.</div>
+      </div>
+    </div>
+
+    <!-- BASIC INFO -->
+    <div class="form-section">
+      <h3>Product Information</h3>
+      <div class="field">
+        <label>Product Name <span class="req">*</span></label>
+        <input type="text" id="prodName" placeholder="e.g. AI Lead Qualifier for Roofing Companies">
+      </div>
+      <div class="field">
+        <label>Description <span class="req">*</span></label>
+        <textarea id="prodDesc" placeholder="Describe what your product does, who it's for, and what problem it solves."></textarea>
+      </div>
+      <div class="field">
+        <label>Product Photo <span class="req">*</span></label>
+        <div class="photo-upload" id="photoUpload">
+          <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoSelect(event)">
+          <div class="photo-upload-icon" id="photoIcon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div class="photo-upload-text" id="photoText">Click to upload photo</div>
+          <div class="photo-upload-hint" id="photoHint">JPG, PNG, or WebP — recommended 800×500px</div>
+          <img class="photo-preview" id="photoPreview" alt="Preview">
+          <button class="photo-remove" id="photoRemove" onclick="removePhoto(event)">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="form-section">
+      <h3>Features</h3>
+      <div class="features-wrap" id="featuresWrap"></div>
+      <button class="add-feat-btn" onclick="addFeature()">+ Add Feature</button>
+    </div>
+
+    <!-- PRICING -->
+    <div class="form-section">
+      <h3>Pricing</h3>
+      <div class="frow">
+        <div class="field">
+          <label>Price <span class="req">*</span></label>
+          <input type="number" id="prodPrice" placeholder="150" min="1" oninput="updatePreview()">
+        </div>
+        <div class="field">
+          <label>Billing Type</label>
+          <select id="prodPriceType" onchange="updatePreview()">
+            <option value="month">Monthly Subscription</option>
+            <option value="one-time">One-Time</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Implementation Fee <span class="req">*</span></label>
+        <input type="number" id="prodSetupFee" placeholder="0" min="0" value="0">
+        <div class="field-hint">One-time fee charged on top of the first payment. Enter 0 if implementation is included.</div>
+      </div>
+      <div class="field">
+        <label>Implementation Time <span class="req">*</span></label>
+        <input type="text" id="prodImplTime" placeholder="e.g. 3–5 business days">
+        <div class="field-hint">How long it takes to deliver and set up after purchase. Shown on the product page.</div>
+      </div>
+      <div class="price-preview" id="pricePreview" style="display:none;"></div>
+    </div>
+
+    <!-- PRODUCT TYPE -->
+    <div class="form-section">
+      <h3>Product Type <span class="req" style="color:#ef4444;">*</span></h3>
+      <div class="field">
+        <label>What type of AI product is this?</label>
+        <select id="prodType">
+          <option value="">Select a type...</option>
+        </select>
+        <div class="field-hint">This determines where your product appears in the marketplace filters.</div>
+      </div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitProduct()">List Product →</button>
+    <div class="form-msg" id="formMsg"></div>
+  </div>
+</div>
+
+<script>
+let currentUser = null;
+let selectedPhotoFile = null;
+let featureCount = 0;
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'auth.html'; return; }
+  currentUser = session.user;
+  const profile = await getProfile(session.user.id);
+  if (!profile || (profile.account_type !== 'seller' && profile.account_type !== 'both' && session.user.email !== ADMIN_EMAIL)) {
+    alert('You need a seller account to add products.');
+    window.location.href = 'auth.html?tab=signup&type=seller';
+    return;
+  }
+  if (profile.stripe_onboarded) {
+    document.getElementById('stripeStatus').className = 'stripe-connected-badge';
+    document.getElementById('stripeStatus').textContent = '✓ Stripe Connected';
+    document.getElementById('stripeConnected').value = 'true';
+  }
+  addFeature(); addFeature(); addFeature();
+  // Populate product type dropdown from shared list
+  const typeSel = document.getElementById('prodType');
+  PRODUCT_TYPES.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    typeSel.appendChild(o);
+  });
+}
+
+function handlePhotoSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  selectedPhotoFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const preview = document.getElementById('photoPreview');
+    preview.src = ev.target.result;
+    preview.classList.add('visible');
+    document.getElementById('photoUpload').classList.add('has-photo');
+    document.getElementById('photoIcon').style.display = 'none';
+    document.getElementById('photoText').style.display = 'none';
+    document.getElementById('photoHint').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePhoto(e) {
+  e.stopPropagation();
+  selectedPhotoFile = null;
+  document.getElementById('photoPreview').src = '';
+  document.getElementById('photoPreview').classList.remove('visible');
+  document.getElementById('photoUpload').classList.remove('has-photo');
+  document.getElementById('photoIcon').style.display = '';
+  document.getElementById('photoText').style.display = '';
+  document.getElementById('photoHint').style.display = '';
+  document.getElementById('photoInput').value = '';
+}
+
+function addFeature() {
+  featureCount++;
+  const wrap = document.getElementById('featuresWrap');
+  const row = document.createElement('div');
+  row.className = 'feature-row';
+  row.id = 'feat-' + featureCount;
+  row.innerHTML = `<input type="text" placeholder="e.g. 24/7 automated responses"><button class="feature-remove" onclick="this.parentElement.remove()">✕</button>`;
+  wrap.appendChild(row);
+}
+
+function updatePreview() {
+  const price = parseFloat(document.getElementById('prodPrice').value) || 0;
+  const type = document.getElementById('prodPriceType').value;
+  const preview = document.getElementById('pricePreview');
+  if (!price) { preview.style.display = 'none'; return; }
+  const payout = (price * 0.85).toFixed(2);
+  const fee = (price * 0.15).toFixed(2);
+  preview.innerHTML = `<strong>$${price}</strong> sale → You receive <strong>$${payout}</strong> · Shiftable fee: $${fee} · Billed ${type === 'month' ? 'monthly' : 'once'}`;
+  preview.style.display = 'block';
+}
+
+function connectStripe() {
+  alert('Stripe Connect integration coming soon. Email reyhlejackson3@gmail.com to get set up manually.');
+}
+
+async function submitProduct() {
+  const name = document.getElementById('prodName').value.trim();
+  const desc = document.getElementById('prodDesc').value.trim();
+  const price = parseFloat(document.getElementById('prodPrice').value);
+  const setupFee = parseFloat(document.getElementById('prodSetupFee').value) || 0;
+  const implTime = document.getElementById('prodImplTime').value.trim();
+  const productType = document.getElementById('prodType').value;
+  const priceType = document.getElementById('prodPriceType').value;
+  const formspree = document.getElementById('sellerFormspree').value.trim();
+  const msg = document.getElementById('formMsg');
+  const btn = document.getElementById('submitBtn');
+
+  // Validate required fields
+  if (!name) { showMsg(msg, 'Product name is required', 'error'); return; }
+  if (!desc) { showMsg(msg, 'Description is required', 'error'); return; }
+  if (!selectedPhotoFile) { showMsg(msg, 'A product photo is required', 'error'); return; }
+  if (!price || price < 1) { showMsg(msg, 'Please enter a valid price', 'error'); return; }
+  if (isNaN(setupFee) || setupFee < 0) { showMsg(msg, 'Implementation fee must be 0 or more', 'error'); return; }
+  if (!implTime) { showMsg(msg, 'Implementation time is required', 'error'); return; }
+  if (!productType) { showMsg(msg, 'Please select a product type', 'error'); return; }
+  if (!formspree || !formspree.includes('formspree.io')) { showMsg(msg, 'Please enter a valid Formspree endpoint URL', 'error'); return; }
+
+  const features = [...document.querySelectorAll('.feature-row input')].map(i => i.value.trim()).filter(Boolean);
+  const categories = [productType];
+
+  btn.disabled = true;
+  showMsg(msg, 'Uploading photo...', '');
+
+  let photoUrl = null;
+  try {
+    photoUrl = await uploadProductPhoto(selectedPhotoFile);
+  } catch(e) {
+    showMsg(msg, 'Photo upload failed: ' + e.message, 'error');
+    btn.disabled = false;
+    return;
+  }
+
+  showMsg(msg, 'Submitting product...', '');
+
+  const { error } = await sb.from('products').insert({
+    seller_id: currentUser.id,
+    name, description: desc,
+    features, price,
+    price_type: priceType,
+    setup_fee: setupFee,
+    implementation_fee: setupFee,
+    implementation_time: implTime,
+    product_type: productType,
+    category: categories,
+    photo_url: photoUrl,
+    seller_formspree: formspree,
+    is_shiftable_original: false,
+    status: 'approved'
+  });
+
+  if (error) {
+    showMsg(msg, 'Error: ' + error.message, 'error');
+    btn.disabled = false;
+    return;
+  }
+
+  showMsg(msg, '✓ Listed! Your product is now live on the marketplace.', 'success');
+  setTimeout(() => window.location.href = 'seller-dashboard.html', 2000);
+}
+
+function showMsg(el, text, type) {
+  el.textContent = text;
+  el.className = 'form-msg' + (type ? ' ' + type : '');
+  el.style.display = 'block';
+}
+
+init();
+</script>
+</body>
+</html>

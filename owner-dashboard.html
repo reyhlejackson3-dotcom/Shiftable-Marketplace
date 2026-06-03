@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Owner Dashboard — Shiftable</title>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:.75rem 2rem;background:#0f172a;position:sticky;top:0;z-index:100;}
+.logo{text-decoration:none;display:flex;align-items:center;}
+.logo-shift{font-family:'League Spartan',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;}
+.logo-able{font-family:'League Spartan',sans-serif;font-size:1.5rem;font-weight:800;color:#38bdf8;}
+.logo-up{font-size:.9rem;color:#38bdf8;position:relative;top:-3px;margin-left:1px;}
+.owner-badge{font-size:.68rem;background:#38bdf8;color:#fff;padding:2px 10px;font-family:'DM Mono',monospace;letter-spacing:.06em;font-weight:700;}
+.nav-right{display:flex;align-items:center;gap:.75rem;}
+.nav-link{font-size:.82rem;color:#94a3b8;text-decoration:none;padding:.4rem .85rem;border:1.5px solid #334155;}
+.nav-link:hover{color:#fff;}
+.btn-logout{font-size:.82rem;color:#94a3b8;background:transparent;border:1.5px solid #334155;padding:.4rem .85rem;cursor:pointer;font-family:'Manrope',sans-serif;}
+.btn-logout:hover{color:#fff;}
+
+.layout{max-width:1280px;margin:0 auto;padding:2rem;display:grid;grid-template-columns:220px 1fr;gap:2rem;}
+@media(max-width:768px){.layout{grid-template-columns:1fr;}}
+
+/* SIDEBAR */
+.sidebar{background:#fff;border:1px solid #e2e8f0;height:fit-content;position:sticky;top:80px;}
+.side-profile{padding:1.5rem;border-bottom:1px solid #e2e8f0;text-align:center;}
+.side-avatar{width:56px;height:56px;background:linear-gradient(135deg,#38bdf8,#0284c7);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'League Spartan',sans-serif;font-weight:800;font-size:1.3rem;color:#fff;margin:0 auto .75rem;}
+.side-name{font-family:'League Spartan',sans-serif;font-weight:800;font-size:1rem;margin-bottom:.2rem;}
+.side-role{font-size:.65rem;color:#38bdf8;text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace;}
+.side-nav{padding:.5rem 0;}
+.side-group{padding:.75rem 1.25rem .25rem;font-size:.65rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;}
+.side-item{display:flex;align-items:center;gap:.6rem;padding:.6rem 1.25rem;font-size:.85rem;color:#475569;cursor:pointer;transition:all .2s;border-left:3px solid transparent;}
+.side-item:hover,.side-item.active{background:#f0f9ff;color:#38bdf8;border-left-color:#38bdf8;}
+.side-item svg{width:16px;height:16px;flex-shrink:0;}
+
+/* MAIN CONTENT */
+.dash-section{display:none;}
+.dash-section.active{display:block;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:2rem;}
+.stat{background:#fff;border:1px solid #e2e8f0;padding:1.25rem;}
+.stat-val{font-family:'League Spartan',sans-serif;font-size:2rem;font-weight:800;color:#38bdf8;margin-bottom:.2rem;}
+.stat-val.dark{color:#0f172a;}
+.stat-val.green{color:#16a34a;}
+.stat-label{font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.06em;font-family:'DM Mono',monospace;}
+
+/* TABLE */
+.table-card{background:#fff;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:1.5rem;}
+.table-head{padding:1.1rem 1.5rem;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
+.table-head h3{font-family:'League Spartan',sans-serif;font-size:.95rem;font-weight:700;}
+.table-actions{display:flex;gap:.5rem;}
+table{width:100%;border-collapse:collapse;}
+th{padding:.75rem 1.25rem;text-align:left;font-size:.68rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #e2e8f0;background:#f8fafc;}
+td{padding:.75rem 1.25rem;font-size:.83rem;border-bottom:1px solid #f1f5f9;color:#475569;vertical-align:middle;}
+td:first-child{font-weight:600;color:#0f172a;}
+tr:last-child td{border:none;}
+.status-badge{font-size:.66rem;font-weight:700;padding:2px 8px;display:inline-block;}
+.s-approved{color:#16a34a;background:#dcfce7;}
+.s-pending{color:#d97706;background:#fef3c7;}
+.s-rejected{color:#dc2626;background:#fef2f2;}
+.act-btn{font-size:.75rem;font-weight:600;padding:.3rem .65rem;cursor:pointer;border:none;font-family:'Manrope',sans-serif;}
+.act-approve{background:#dcfce7;color:#16a34a;}
+.act-approve:hover{background:#bbf7d0;}
+.act-reject{background:#fef2f2;color:#dc2626;}
+.act-reject:hover{background:#fecaca;}
+.act-edit{background:#f0f9ff;color:#0284c7;}
+.act-edit:hover{background:#e0f2fe;}
+.act-delete{background:#f1f5f9;color:#64748b;}
+.act-delete:hover{background:#e2e8f0;}
+.empty{padding:2.5rem;text-align:center;color:#64748b;font-size:.88rem;}
+.td-actions{display:flex;gap:.35rem;flex-wrap:wrap;}
+.prod-thumb{width:40px;height:40px;object-fit:cover;border:1px solid #e2e8f0;}
+.prod-thumb-placeholder{width:40px;height:40px;background:#f0f9ff;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.8rem;}
+
+/* EDIT MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;}
+.modal-ov.open{display:flex;}
+.modal{background:#fff;width:100%;max-width:560px;overflow:hidden;max-height:90vh;overflow-y:auto;}
+.modal-hdr{background:#0f172a;padding:1.25rem 1.5rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;}
+.modal-hdr h3{font-family:'League Spartan',sans-serif;font-size:1rem;font-weight:700;color:#fff;}
+.modal-close{background:transparent;border:1px solid #334155;color:#94a3b8;width:28px;height:28px;cursor:pointer;font-size:.85rem;}
+.modal-body{padding:1.5rem;}
+.field{margin-bottom:.9rem;}
+.field label{display:block;font-size:.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;}
+.field input,.field textarea,.field select{width:100%;border:1.5px solid #e2e8f0;padding:.6rem .85rem;font-size:.88rem;outline:none;font-family:'Manrope',sans-serif;color:#0f172a;transition:border-color .2s;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:#38bdf8;}
+.field textarea{resize:vertical;min-height:80px;}
+.modal-save{width:100%;background:#38bdf8;color:#fff;border:none;padding:.85rem;font-family:'Manrope',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;margin-top:.5rem;}
+.modal-save:hover{background:#0ea5e9;}
+.modal-msg{font-size:.82rem;text-align:center;margin-top:.5rem;padding:.5rem;display:none;}
+.modal-msg.success{color:#16a34a;background:#f0fdf4;}
+.modal-msg.error{color:#dc2626;background:#fef2f2;}
+
+/* ADD PRODUCT BTN */
+.add-btn{background:#38bdf8;color:#fff;border:none;padding:.5rem 1.1rem;font-family:'Manrope',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;}
+.add-btn:hover{background:#0ea5e9;}
+</style>
+</head>
+<body>
+<nav>
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <a href="index.html" class="logo"><img src="logo.png" alt="Shiftable" style="height:36px;width:auto;"></a>
+    <span class="owner-badge">OWNER</span>
+  </div>
+  <div class="nav-right">
+    <a href="index.html" class="nav-link">← View Site</a>
+    <button class="btn-logout" onclick="handleLogout()">Log Out</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="side-profile">
+      <div class="side-avatar">R</div>
+      <div class="side-name">Reyhle</div>
+      <div class="side-role">Founder · Owner</div>
+    </div>
+    <div class="side-nav">
+      <div class="side-group">Overview</div>
+      <div class="side-item active" onclick="show('overview',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+
+      <div class="side-group">Products</div>
+      <div class="side-item" onclick="show('pending',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Pending Review <span id="pendingCount" style="background:#fef3c7;color:#d97706;font-size:.65rem;font-weight:700;padding:1px 6px;margin-left:.25rem;"></span>
+      </div>
+      <div class="side-item" onclick="show('myproducts',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        My Products
+      </div>
+      <div class="side-item" onclick="show('allproducts',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        All Products
+      </div>
+
+      <div class="side-group">Business</div>
+      <div class="side-item" onclick="show('orders',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        Revenue & Orders
+      </div>
+      <div class="side-item" onclick="show('users',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Users
+      </div>
+
+      <div class="side-group">Actions</div>
+      <div class="side-item" onclick="window.location.href='add-product.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Product
+      </div>
+      <div class="side-item" onclick="window.location.href='marketplace.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        View Marketplace
+      </div>
+      <div class="side-item" onclick="show('settings',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Settings
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div>
+
+    <!-- OVERVIEW -->
+    <div class="dash-section active" id="sec-overview">
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-val" id="ovUsers">0</div><div class="stat-label">Total Users</div></div>
+        <div class="stat"><div class="stat-val dark" id="ovProducts">0</div><div class="stat-label">Live Products</div></div>
+        <div class="stat"><div class="stat-val" id="ovPending">0</div><div class="stat-label">Pending Review</div></div>
+        <div class="stat"><div class="stat-val green" id="ovRevenue">$0</div><div class="stat-label">Platform Revenue</div></div>
+        <div class="stat"><div class="stat-val green" id="ovMyRevenue">$0</div><div class="stat-label">My Revenue</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-head"><h3>Recent Orders (All)</h3></div>
+        <table><thead><tr><th>Product</th><th>Amount</th><th>My Payout</th><th>Platform Fee</th><th>Date</th></tr></thead>
+        <tbody id="ovOrders"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- PENDING -->
+    <div class="dash-section" id="sec-pending">
+      <div class="table-card">
+        <div class="table-head"><h3>Products Awaiting Approval</h3></div>
+        <table><thead><tr><th>Photo</th><th>Product</th><th>Seller</th><th>Price</th><th>Submitted</th><th>Actions</th></tr></thead>
+        <tbody id="pendingTable"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- MY PRODUCTS -->
+    <div class="dash-section" id="sec-myproducts">
+      <div class="table-card">
+        <div class="table-head">
+          <h3>My Products (Shiftable Systems)</h3>
+          <a href="add-product.html" class="add-btn">+ Add Product</a>
+        </div>
+        <table><thead><tr><th>Photo</th><th>Name</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="myProductsTable"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- ALL PRODUCTS -->
+    <div class="dash-section" id="sec-allproducts">
+      <div class="table-card">
+        <div class="table-head"><h3>All Products</h3></div>
+        <table><thead><tr><th>Photo</th><th>Name</th><th>Seller</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="allProductsTable"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="dash-section" id="sec-orders">
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-val" id="ordTotal">0</div><div class="stat-label">Total Orders</div></div>
+        <div class="stat"><div class="stat-val green" id="ordGross">$0</div><div class="stat-label">Gross Revenue</div></div>
+        <div class="stat"><div class="stat-val green" id="ordPlatform">$0</div><div class="stat-label">Platform Fees</div></div>
+        <div class="stat"><div class="stat-val green" id="ordMine">$0</div><div class="stat-label">My Payouts</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-head"><h3>All Orders</h3></div>
+        <table><thead><tr><th>Product</th><th>Amount</th><th>Platform Fee</th><th>Seller Payout</th><th>Date</th></tr></thead>
+        <tbody id="allOrders"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="dash-section" id="sec-settings">
+      <div class="table-card">
+        <div class="table-head"><h3>Consulting Profile</h3></div>
+        <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;max-width:480px;">
+
+          <!-- PHOTO UPLOAD -->
+          <div class="field">
+            <label style="display:block;font-size:.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Profile Photo</label>
+            <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.75rem;">
+              <div id="photoPreviewWrap" style="width:72px;height:72px;border-radius:4px;overflow:hidden;background:linear-gradient(135deg,#38bdf8,#0284c7);display:flex;align-items:center;justify-content:center;font-family:'League Spartan',sans-serif;font-weight:800;font-size:1.5rem;color:#fff;flex-shrink:0;">
+                <span id="photoPreviewInitial">J</span>
+                <img id="photoPreviewImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;">
+              </div>
+              <div>
+                <input type="file" id="photoFileInput" accept="image/*" style="display:none;" onchange="handlePhotoPreview(event)">
+                <button onclick="document.getElementById('photoFileInput').click()" style="background:#f0f9ff;color:#0284c7;border:1.5px solid #bae6fd;padding:.5rem 1rem;font-size:.82rem;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;display:block;margin-bottom:.4rem;">Upload Photo</button>
+                <span style="font-size:.72rem;color:#94a3b8;">JPG or PNG recommended</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field"><label style="display:block;font-size:.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;">Display Name</label><input type="text" id="settingName" value="Jackson Reyhle" style="width:100%;border:1.5px solid #e2e8f0;padding:.65rem .9rem;font-size:.9rem;outline:none;font-family:'Manrope',sans-serif;transition:border-color .2s;" onfocus="this.style.borderColor='#38bdf8'" onblur="this.style.borderColor='#e2e8f0'"></div>
+          <div class="field"><label style="display:block;font-size:.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;">Hourly Rate ($)</label><input type="number" id="settingRate" value="100" style="width:100%;border:1.5px solid #e2e8f0;padding:.65rem .9rem;font-size:.9rem;outline:none;font-family:'Manrope',sans-serif;transition:border-color .2s;" onfocus="this.style.borderColor='#38bdf8'" onblur="this.style.borderColor='#e2e8f0'"></div>
+          <div class="field"><label style="display:block;font-size:.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;">Bio</label><textarea id="settingBio" rows="4" style="width:100%;border:1.5px solid #e2e8f0;padding:.65rem .9rem;font-size:.9rem;outline:none;font-family:'Manrope',sans-serif;resize:vertical;transition:border-color .2s;" onfocus="this.style.borderColor='#38bdf8'" onblur="this.style.borderColor='#e2e8f0'"></textarea></div>
+          <button onclick="saveSettings()" style="background:#38bdf8;color:#fff;border:none;padding:.85rem 2rem;font-family:'Manrope',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;width:fit-content;">Save Settings</button>
+          <div id="settingsMsg" style="font-size:.82rem;display:none;padding:.5rem;font-weight:500;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="dash-section" id="sec-users">
+      <div class="table-card">
+        <div class="table-head"><h3>All Users</h3></div>
+        <table><thead><tr><th>Name</th><th>Account Type</th><th>Joined</th></tr></thead>
+        <tbody id="usersTable"><tr><td colspan="3" class="empty">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDIT PRODUCT MODAL -->
+<div class="modal-ov" id="editModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3>Edit Product</h3>
+      <button class="modal-close" onclick="closeEdit()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="field"><label>Name</label><input type="text" id="editName"></div>
+      <div class="field"><label>Description</label><textarea id="editDesc"></textarea></div>
+      <div class="field"><label>Price ($)</label><input type="number" id="editPrice"></div>
+      <div class="field"><label>Billing Type</label>
+        <select id="editPriceType"><option value="month">Monthly</option><option value="one-time">One-Time</option></select>
+      </div>
+      <div class="field"><label>Status</label>
+        <select id="editStatus"><option value="approved">Approved</option><option value="pending">Pending</option><option value="rejected">Rejected</option></select>
+      </div>
+      <div class="field" style="display:flex;align-items:center;gap:.75rem;">
+        <input type="checkbox" id="editVerified" style="width:16px;height:16px;accent-color:#38bdf8;">
+        <label style="font-size:.85rem;font-weight:600;color:#0f172a;text-transform:none;letter-spacing:0;">Grant Shiftable Verified status</label>
+      </div>
+      <div class="field"><label>Photo URL (or upload new below)</label><input type="url" id="editPhotoUrl" placeholder="https://..."></div>
+      <div class="field"><label>Upload New Photo</label><input type="file" id="editPhotoFile" accept="image/*"></div>
+      <button class="modal-save" onclick="saveEdit()">Save Changes</button>
+      <div class="modal-msg" id="editMsg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let allData = { products: [], users: [], orders: [] };
+
+let selectedPhotoFile = null;
+
+function handlePhotoPreview(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  selectedPhotoFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('photoPreviewImg').src = ev.target.result;
+    document.getElementById('photoPreviewImg').style.display = 'block';
+    document.getElementById('photoPreviewInitial').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveSettings() {
+  const name = document.getElementById('settingName').value.trim();
+  const rate = document.getElementById('settingRate').value.trim();
+  const bio = document.getElementById('settingBio').value.trim();
+  const msg = document.getElementById('settingsMsg');
+  msg.textContent = 'Saving...';
+  msg.style.display = 'block';
+  msg.style.color = '#475569';
+  msg.style.background = '#f8fafc';
+
+  let photoUrl = null;
+
+  // Upload photo if selected
+  if (selectedPhotoFile) {
+    try {
+      const ext = selectedPhotoFile.name.split('.').pop();
+      const path = `owner/profile.${ext}`;
+      const { error } = await sb.storage.from('profile-images').upload(path, selectedPhotoFile, { upsert: true });
+      if (!error) {
+        const { data: urlData } = sb.storage.from('profile-images').getPublicUrl(path);
+        photoUrl = urlData.publicUrl;
+      }
+    } catch(e) {
+      console.warn('Photo upload failed:', e);
+    }
+  }
+
+  const updates = [
+    { key: 'consulting_name', value: name },
+    { key: 'consulting_rate', value: rate },
+    { key: 'consulting_bio', value: bio },
+  ];
+  if (photoUrl) updates.push({ key: 'consulting_photo', value: photoUrl });
+
+  const results = await Promise.all(updates.map(u =>
+    sb.from('settings').upsert({ key: u.key, value: u.value }, { onConflict: 'key' })
+  ));
+
+  const hasError = results.some(r => r.error);
+  if (hasError) {
+    msg.textContent = 'Error saving. Try again.';
+    msg.style.color = '#dc2626';
+    msg.style.background = '#fef2f2';
+  } else {
+    msg.textContent = '✓ Saved! Consulting page updated live.';
+    msg.style.color = '#16a34a';
+    msg.style.background = '#f0fdf4';
+    selectedPhotoFile = null;
+  }
+}
+
+async function loadSettings() {
+  const { data } = await sb.from('settings').select('*');
+  if (!data) return;
+  data.forEach(row => {
+    if (row.key === 'consulting_name') document.getElementById('settingName').value = row.value;
+    if (row.key === 'consulting_rate') document.getElementById('settingRate').value = row.value;
+    if (row.key === 'consulting_bio') document.getElementById('settingBio').value = row.value;
+    if (row.key === 'consulting_photo' && row.value) {
+      document.getElementById('photoPreviewImg').src = row.value;
+      document.getElementById('photoPreviewImg').style.display = 'block';
+      document.getElementById('photoPreviewInitial').style.display = 'none';
+    }
+  });
+}
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session || session.user.email !== ADMIN_EMAIL) {
+    alert('Owner access only');
+    window.location.href = 'index.html';
+    return;
+  }
+  await loadAll();
+}
+
+async function loadAll() {
+  const [pRes, uRes, oRes] = await Promise.all([
+    sb.from('products').select('*, profiles(full_name)').order('created_at', { ascending: false }),
+    sb.from('profiles').select('*').order('created_at', { ascending: false }),
+    sb.from('orders').select('*, products(name, is_shiftable_original)').order('created_at', { ascending: false })
+  ]);
+
+  allData.products = pRes.data || [];
+  allData.users = uRes.data || [];
+  allData.orders = oRes.data || [];
+
+  renderAll();
+}
+
+function renderAll() {
+  const { products, users, orders } = allData;
+  const pending = products.filter(p => p.status === 'pending');
+  const live = products.filter(p => p.status === 'approved');
+  const myProds = products.filter(p => p.is_shiftable_original);
+  const platformRevenue = orders.reduce((s,o) => s + o.platform_fee, 0);
+  const myRevenue = orders.filter(o => o.products?.is_shiftable_original).reduce((s,o) => s + o.seller_payout, 0);
+  const grossRevenue = orders.reduce((s,o) => s + o.amount, 0);
+
+  // Stats
+  document.getElementById('ovUsers').textContent = users.length;
+  document.getElementById('ovProducts').textContent = live.length;
+  document.getElementById('ovPending').textContent = pending.length;
+  document.getElementById('ovRevenue').textContent = '$' + platformRevenue.toFixed(0);
+  document.getElementById('ovMyRevenue').textContent = '$' + myRevenue.toFixed(0);
+  document.getElementById('pendingCount').textContent = pending.length || '';
+  document.getElementById('ordTotal').textContent = orders.length;
+  document.getElementById('ordGross').textContent = '$' + grossRevenue.toFixed(0);
+  document.getElementById('ordPlatform').textContent = '$' + platformRevenue.toFixed(0);
+  document.getElementById('ordMine').textContent = '$' + myRevenue.toFixed(0);
+
+  // Overview orders
+  document.getElementById('ovOrders').innerHTML = orders.slice(0,8).map(o => `
+    <tr>
+      <td>${o.products?.name || '—'}</td>
+      <td>$${o.amount}</td>
+      <td style="color:#16a34a;font-weight:600;">$${o.seller_payout?.toFixed(2)}</td>
+      <td style="color:#38bdf8;">$${o.platform_fee?.toFixed(2)}</td>
+      <td>${new Date(o.created_at).toLocaleDateString()}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" class="empty">No orders yet</td></tr>';
+
+  // Pending
+  document.getElementById('pendingTable').innerHTML = pending.length ? pending.map(p => `
+    <tr>
+      <td>${p.photo_url ? `<img src="${p.photo_url}" class="prod-thumb">` : '<div class="prod-thumb-placeholder">—</div>'}</td>
+      <td>${p.name}</td>
+      <td>${p.profiles?.full_name || 'Unknown'}</td>
+      <td>$${p.price}/${p.price_type}</td>
+      <td>${new Date(p.created_at).toLocaleDateString()}</td>
+      <td><div class="td-actions">
+        <button class="act-btn act-approve" onclick="updateStatus('${p.id}','approved')">Approve</button>
+        <button class="act-btn act-reject" onclick="updateStatus('${p.id}','rejected')">Reject</button>
+        <button class="act-btn act-edit" onclick="openEdit('${p.id}')">Edit</button>
+      </div></td>
+    </tr>
+  `).join('') : '<tr><td colspan="6" class="empty">No pending products</td></tr>';
+
+  // My products
+  document.getElementById('myProductsTable').innerHTML = myProds.length ? myProds.map(p => `
+    <tr>
+      <td>${p.photo_url ? `<img src="${p.photo_url}" class="prod-thumb">` : '<div class="prod-thumb-placeholder">—</div>'}</td>
+      <td>${p.name}</td>
+      <td>$${p.price}/${p.price_type}</td>
+      <td><span class="status-badge s-${p.status}">${p.status}</span></td>
+      <td><div class="td-actions">
+        <button class="act-btn act-edit" onclick="openEdit('${p.id}')">Edit</button>
+        <button class="act-btn act-delete" onclick="deleteProduct('${p.id}')">Delete</button>
+      </div></td>
+    </tr>
+  `).join('') : '<tr><td colspan="5" class="empty">No products yet</td></tr>';
+
+  // All products
+  document.getElementById('allProductsTable').innerHTML = products.length ? products.map(p => `
+    <tr>
+      <td>${p.photo_url ? `<img src="${p.photo_url}" class="prod-thumb">` : '<div class="prod-thumb-placeholder">—</div>'}</td>
+      <td>${p.name}</td>
+      <td>${p.is_shiftable_original ? 'Shiftable' : (p.profiles?.full_name || 'Unknown')}</td>
+      <td>$${p.price}/${p.price_type}</td>
+      <td><span class="status-badge s-${p.status}">${p.status}</span></td>
+      <td><div class="td-actions">
+        <button class="act-btn act-edit" onclick="openEdit('${p.id}')">Edit</button>
+        ${p.status !== 'approved' ? `<button class="act-btn act-approve" onclick="updateStatus('${p.id}','approved')">Approve</button>` : ''}
+        ${p.status !== 'rejected' ? `<button class="act-btn act-reject" onclick="updateStatus('${p.id}','rejected')">Reject</button>` : ''}
+        <button class="act-btn act-delete" onclick="deleteProduct('${p.id}')">Delete</button>
+      </div></td>
+    </tr>
+  `).join('') : '<tr><td colspan="6" class="empty">No products</td></tr>';
+
+  // All orders
+  document.getElementById('allOrders').innerHTML = orders.length ? orders.map(o => `
+    <tr>
+      <td>${o.products?.name || '—'}</td>
+      <td>$${o.amount}</td>
+      <td style="color:#38bdf8;">$${o.platform_fee?.toFixed(2)}</td>
+      <td>$${o.seller_payout?.toFixed(2)}</td>
+      <td>${new Date(o.created_at).toLocaleDateString()}</td>
+    </tr>
+  `).join('') : '<tr><td colspan="5" class="empty">No orders yet</td></tr>';
+
+  // Users
+  document.getElementById('usersTable').innerHTML = users.length ? users.map(u => `
+    <tr><td>${u.full_name || '—'}</td><td>${u.account_type || '—'}</td><td>${new Date(u.created_at).toLocaleDateString()}</td></tr>
+  `).join('') : '<tr><td colspan="3" class="empty">No users</td></tr>';
+}
+
+async function updateStatus(id, status) {
+  await sb.from('products').update({ status }).eq('id', id);
+  showToast(status === 'approved' ? 'Product approved' : 'Product rejected');
+  await loadAll();
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Delete this product permanently?')) return;
+  await sb.from('products').delete().eq('id', id);
+  showToast('Product deleted');
+  await loadAll();
+}
+
+function openEdit(id) {
+  const p = allData.products.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('editId').value = p.id;
+  document.getElementById('editName').value = p.name || '';
+  document.getElementById('editDesc').value = p.description || '';
+  document.getElementById('editPrice').value = p.price || '';
+  document.getElementById('editPriceType').value = p.price_type || 'month';
+  document.getElementById('editStatus').value = p.status || 'pending';
+  document.getElementById('editPhotoUrl').value = p.photo_url || '';
+  document.getElementById('editVerified').checked = p.is_shiftable_verified || false;
+  document.getElementById('editMsg').style.display = 'none';
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeEdit() { document.getElementById('editModal').classList.remove('open'); }
+
+async function saveEdit() {
+  const id = document.getElementById('editId').value;
+  const msg = document.getElementById('editMsg');
+  const photoFile = document.getElementById('editPhotoFile').files[0];
+
+  let photoUrl = document.getElementById('editPhotoUrl').value.trim();
+
+  if (photoFile) {
+    try {
+      photoUrl = await uploadProductPhoto(photoFile);
+    } catch(e) {
+      msg.textContent = 'Photo upload failed: ' + e.message;
+      msg.className = 'modal-msg error';
+      msg.style.display = 'block';
+      return;
+    }
+  }
+
+  const updates = {
+    name: document.getElementById('editName').value.trim(),
+    description: document.getElementById('editDesc').value.trim(),
+    price: parseFloat(document.getElementById('editPrice').value),
+    price_type: document.getElementById('editPriceType').value,
+    status: document.getElementById('editStatus').value,
+    is_shiftable_verified: document.getElementById('editVerified').checked,
+  };
+  if (photoUrl) updates.photo_url = photoUrl;
+
+  const { error } = await sb.from('products').update(updates).eq('id', id);
+  if (error) {
+    msg.textContent = 'Error: ' + error.message;
+    msg.className = 'modal-msg error';
+    msg.style.display = 'block';
+    return;
+  }
+  msg.textContent = '✓ Saved!';
+  msg.className = 'modal-msg success';
+  msg.style.display = 'block';
+  await loadAll();
+  setTimeout(closeEdit, 800);
+}
+
+function show(name, el) {
+  if (name === 'settings') loadSettings();
+  document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.side-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+document.getElementById('editModal').addEventListener('click', e => { if (e.target === document.getElementById('editModal')) closeEdit(); });
+
+init();
+</script>
+</body>
+</html>

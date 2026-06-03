@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cart — Shiftable</title>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style id="navStyles"></style>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;}
+.page-header{background:#0f172a;padding:1.5rem 2rem;color:#fff;}
+.page-header h1{font-family:'League Spartan',sans-serif;font-size:1.75rem;font-weight:800;}
+.main{max-width:1100px;margin:2rem auto;padding:0 2rem;display:grid;grid-template-columns:1fr 340px;gap:2rem;align-items:start;}
+@media(max-width:768px){.main{grid-template-columns:1fr;}}
+.cart-section{background:#fff;border:1px solid #e2e8f0;}
+.cart-hdr{padding:1.1rem 1.5rem;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
+.cart-hdr h2{font-family:'League Spartan',sans-serif;font-size:1rem;font-weight:700;}
+.cart-hdr span{font-size:.82rem;color:#64748b;}
+.cart-item{padding:1.1rem 1.5rem;border-bottom:1px solid #f1f5f9;display:flex;gap:1rem;align-items:flex-start;}
+.cart-item:last-child{border:none;}
+.ci-img{width:64px;height:64px;overflow:hidden;flex-shrink:0;border:1px solid #e2e8f0;}
+.ci-img img{width:100%;height:100%;object-fit:cover;}
+.ci-img-ph{width:100%;height:100%;background:#f0f9ff;display:flex;align-items:center;justify-content:center;font-size:1.5rem;}
+.ci-info{flex:1;}
+.ci-name{font-family:'League Spartan',sans-serif;font-size:.92rem;font-weight:700;margin-bottom:.15rem;}
+.ci-seller{font-size:.72rem;color:#38bdf8;font-weight:600;margin-bottom:.15rem;}
+.ci-type{font-size:.72rem;color:#64748b;}
+.ci-right{text-align:right;flex-shrink:0;}
+.ci-price{font-family:'League Spartan',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:.2rem;}
+.ci-per{font-size:.68rem;color:#64748b;margin-bottom:.45rem;}
+.ci-remove{font-size:.75rem;color:#ef4444;background:none;border:none;cursor:pointer;font-family:'Manrope',sans-serif;}
+.ci-remove:hover{text-decoration:underline;}
+.empty-cart{padding:4rem;text-align:center;color:#64748b;}
+.empty-cart h3{font-family:'League Spartan',sans-serif;font-size:1.2rem;font-weight:700;color:#0f172a;margin-bottom:.5rem;}
+.empty-cart p{font-size:.85rem;margin-bottom:1.5rem;}
+.empty-cart a{background:#38bdf8;color:#fff;padding:.7rem 1.5rem;font-weight:700;text-decoration:none;font-size:.85rem;display:inline-block;}
+.summary-box{background:#fff;border:1px solid #e2e8f0;padding:1.5rem;position:sticky;top:80px;}
+.summary-box h3{font-family:'League Spartan',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid #e2e8f0;}
+.sum-row{display:flex;justify-content:space-between;font-size:.83rem;margin-bottom:.45rem;}
+.sum-row .k{color:#64748b;}
+.sum-divider{height:1px;background:#e2e8f0;margin:1rem 0;}
+.sum-total{display:flex;justify-content:space-between;margin-bottom:1.4rem;}
+.sum-total .k{font-family:'League Spartan',sans-serif;font-size:.92rem;font-weight:700;}
+.sum-total .v{font-family:'League Spartan',sans-serif;font-size:1.15rem;font-weight:800;}
+.checkout-btn{width:100%;background:#38bdf8;color:#fff;border:none;padding:1rem;font-family:'Manrope',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .2s;margin-bottom:.6rem;}
+.checkout-btn:hover{background:#0ea5e9;}
+.checkout-btn:disabled{background:#94a3b8;cursor:not-allowed;}
+.continue-btn{width:100%;background:transparent;color:#475569;border:1.5px solid #e2e8f0;padding:.65rem;font-family:'Manrope',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.continue-btn:hover{border-color:#38bdf8;color:#38bdf8;}
+.secure{text-align:center;font-size:.7rem;color:#94a3b8;margin-top:.6rem;}
+.checkout-form{display:none;margin-top:1.4rem;border-top:1px solid #e2e8f0;padding-top:1.4rem;}
+.checkout-form h4{font-family:'League Spartan',sans-serif;font-size:.9rem;font-weight:700;margin-bottom:.9rem;}
+.field{margin-bottom:.8rem;}
+.field label{display:block;font-size:.67rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.28rem;}
+.field input,.field textarea{width:100%;border:1.5px solid #e2e8f0;padding:.55rem .8rem;font-size:.85rem;outline:none;font-family:'Manrope',sans-serif;color:#0f172a;transition:border-color .2s;}
+.field input:focus,.field textarea:focus{border-color:#38bdf8;}
+.field textarea{resize:vertical;min-height:65px;}
+.place-btn{width:100%;background:#0f172a;color:#fff;border:none;padding:.9rem;font-family:'Manrope',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .2s;}
+.place-btn:hover{background:#1e293b;}
+.order-msg{font-size:.8rem;text-align:center;margin-top:.6rem;padding:.5rem;font-weight:500;display:none;}
+.order-msg.error{color:#dc2626;background:#fef2f2;}
+.order-msg.success{color:#16a34a;background:#f0fdf4;}
+</style>
+</head>
+<body>
+<div id="navMount"></div>
+<div class="page-header"><h1>Your Cart</h1></div>
+<div class="main">
+  <div>
+    <div class="cart-section">
+      <div class="cart-hdr"><h2>Cart Items</h2><span id="cartItemCount">Loading...</span></div>
+      <div id="cartItems"></div>
+    </div>
+  </div>
+  <div>
+    <div class="summary-box">
+      <h3>Order Summary</h3>
+      <div id="summaryRows"></div>
+      <div class="sum-divider"></div>
+      <div class="sum-total"><span class="k">Monthly Total</span><span class="v" id="sumTotal">$0</span></div>
+      <button class="checkout-btn" id="checkoutBtn" onclick="showCheckout()">Proceed to Checkout</button>
+      <button class="continue-btn" onclick="window.location.href='marketplace.html'">Continue Shopping</button>
+      <p class="secure">Secure checkout</p>
+      <div class="checkout-form" id="checkoutForm">
+        <h4>Your Information</h4>
+        <div class="field"><label>Full Name</label><input type="text" id="ckName"></div>
+        <div class="field"><label>Email</label><input type="email" id="ckEmail"></div>
+        <div class="field"><label>Business Name</label><input type="text" id="ckBiz" placeholder="Your business"></div>
+        <div class="field"><label>Phone Number</label><input type="tel" id="ckPhone" placeholder="(720) 555-0100"></div>
+        <div class="field"><label>Notes (optional)</label><textarea id="ckNotes" placeholder="Any details..."></textarea></div>
+        <button class="place-btn" onclick="placeOrder()">Place Order</button>
+        <div id="orderMsg" class="order-msg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+let cartProducts = [];
+let currentUser = null;
+
+async function init() {
+  document.getElementById('navStyles').textContent = NAV_CSS;
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'auth.html'; return; }
+  currentUser = session.user;
+  const profile = await getProfile(session.user.id);
+  document.getElementById('navMount').innerHTML = buildNav(session.user, profile);
+  await loadCart();
+}
+
+async function loadCart() {
+  const { data } = await sb.from('cart_items').select('*, products(*)').eq('user_id', currentUser.id);
+  cartProducts = data || [];
+  renderCart();
+  renderSummary();
+  updateCartCount();
+}
+
+function renderCart() {
+  const count = cartProducts.length;
+  document.getElementById('cartItemCount').textContent = count + ' item' + (count !== 1 ? 's' : '');
+  if (!count) {
+    document.getElementById('cartItems').innerHTML = `<div class="empty-cart"><h3>Cart is empty</h3><p>Browse the marketplace to find AI systems</p><a href="marketplace.html">Browse Marketplace</a></div>`;
+    document.getElementById('checkoutBtn').disabled = true;
+    return;
+  }
+  document.getElementById('cartItems').innerHTML = cartProducts.map(item => {
+    const p = item.products;
+    return `<div class="cart-item">
+      <div class="ci-img">${p.photo_url ? `<img src="${p.photo_url}" alt="${p.name}">` : '<div class="ci-img-ph">📦</div>'}</div>
+      <div class="ci-info"><div class="ci-name">${p.name}</div><div class="ci-seller">${p.is_shiftable_original ? 'Shiftable Systems' : 'Seller'}</div><div class="ci-type">${p.price_type === 'month' ? 'Monthly' : 'One-time'}</div></div>
+      <div class="ci-right"><div class="ci-price">$${p.price}</div><div class="ci-per">/${p.price_type}</div><button class="ci-remove" onclick="removeItem('${item.id}')">Remove</button></div>
+    </div>`;
+  }).join('');
+}
+
+function renderSummary() {
+  const total = cartProducts.reduce((s,i) => s + (i.products ? i.products.price : 0), 0);
+  document.getElementById('summaryRows').innerHTML = cartProducts.map(i => `<div class="sum-row"><span class="k">${i.products ? i.products.name : ''}</span><span>$${i.products ? i.products.price : 0}/mo</span></div>`).join('');
+  document.getElementById('sumTotal').textContent = '$' + total + '/mo';
+}
+
+async function removeItem(id) {
+  await sb.from('cart_items').delete().eq('id', id);
+  await loadCart();
+  showToast('Item removed');
+}
+
+function showCheckout() {
+  if (!cartProducts.length) return;
+  document.getElementById('checkoutForm').style.display = 'block';
+  document.getElementById('checkoutBtn').style.display = 'none';
+  document.getElementById('ckName').value = currentUser.user_metadata?.full_name || '';
+  document.getElementById('ckEmail').value = currentUser.email || '';
+  document.getElementById('checkoutForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function placeOrder() {
+  const name = document.getElementById('ckName').value.trim();
+  const email = document.getElementById('ckEmail').value.trim();
+  const biz = document.getElementById('ckBiz').value.trim();
+  const phone = document.getElementById('ckPhone').value.trim();
+  const notes = document.getElementById('ckNotes').value.trim();
+  const msg = document.getElementById('orderMsg');
+
+  if (!name || !email || !phone) { msg.textContent = 'Name, email, and phone are required'; msg.className = 'order-msg error'; msg.style.display = 'block'; return; }
+
+  msg.textContent = 'Processing...'; msg.className = 'order-msg'; msg.style.display = 'block';
+
+  const total = cartProducts.reduce((s,i) => s + (i.products ? i.products.price : 0), 0);
+  const productNames = cartProducts.map(i => i.products ? i.products.name : '').join(', ');
+
+  // Group by seller endpoint — each seller gets notified of their own products
+  const sellerGroups = {};
+  cartProducts.forEach(item => {
+    const p = item.products;
+    if (!p) return;
+    const endpoint = p.is_shiftable_original ? OWNER_FORMSPREE : (p.seller_formspree || OWNER_FORMSPREE);
+    if (!sellerGroups[endpoint]) sellerGroups[endpoint] = [];
+    sellerGroups[endpoint].push(p.name);
+  });
+
+  const promises = Object.entries(sellerGroups).map(([endpoint, prods]) => {
+    const fd = new FormData();
+    fd.append('_subject', 'New Purchase — ' + prods.join(', '));
+    fd.append('buyer_name', name);
+    fd.append('buyer_email', email);
+    fd.append('buyer_phone', phone);
+    fd.append('business_name', biz || 'Not provided');
+    fd.append('products', prods.join(', '));
+    fd.append('total', '$' + total + '/month');
+    fd.append('notes', notes || 'None');
+    return fetch(endpoint, { method: 'POST', body: fd, headers: { Accept: 'application/json' } }).catch(() => {});
+  });
+
+  await Promise.all(promises);
+
+  // Record each cart item as an order so dashboards & revenue tracking work
+  const orderRows = cartProducts.filter(i => i.products).map(item => {
+    const p = item.products;
+    const amount = p.price;
+    const platform_fee = p.is_shiftable_original ? 0 : +(amount * 0.15).toFixed(2);
+    const seller_payout = +(amount - platform_fee).toFixed(2);
+    return {
+      buyer_id: currentUser.id,
+      seller_id: p.seller_id,
+      product_id: p.id,
+      amount,
+      platform_fee,
+      seller_payout,
+      buyer_name: name,
+      buyer_email: email,
+      status: 'active'
+    };
+  });
+  if (orderRows.length) {
+    await sb.from('orders').insert(orderRows);
+  }
+
+  await sb.from('cart_items').delete().eq('user_id', currentUser.id);
+
+  msg.textContent = 'Order placed! You\'ll hear from us at ' + email + ' within 24 hours.';
+  msg.className = 'order-msg success';
+  document.getElementById('cartItems').innerHTML = `<div class="empty-cart"><h3>Order Submitted!</h3><p>Check your email — we will be in touch within 24 hours.</p><a href="marketplace.html">Continue Shopping</a></div>`;
+  document.getElementById('summaryRows').innerHTML = '';
+  document.getElementById('sumTotal').textContent = '$0';
+  updateCartCount();
+}
+
+init();
+</script>
+</body>
+</html>

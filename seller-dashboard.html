@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seller Dashboard — Shiftable</title>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style id="navStyles"></style>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;}
+.layout{max-width:1100px;margin:0 auto;padding:2rem;display:grid;grid-template-columns:200px 1fr;gap:2rem;}
+@media(max-width:700px){.layout{grid-template-columns:1fr;}}
+.sidebar{background:#fff;border:1px solid #e2e8f0;height:fit-content;}
+.side-profile{padding:1.25rem;border-bottom:1px solid #e2e8f0;text-align:center;}
+.side-avatar{width:50px;height:50px;background:linear-gradient(135deg,#38bdf8,#0284c7);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'League Spartan',sans-serif;font-weight:800;font-size:1.1rem;color:#fff;margin:0 auto .6rem;}
+.side-name{font-family:'League Spartan',sans-serif;font-weight:700;font-size:.9rem;margin-bottom:.15rem;}
+.side-role{font-size:.62rem;color:#38bdf8;text-transform:uppercase;letter-spacing:.08em;font-family:'DM Mono',monospace;}
+.side-nav{padding:.4rem 0;}
+.side-item{display:flex;align-items:center;gap:.5rem;padding:.55rem 1.1rem;font-size:.83rem;color:#475569;cursor:pointer;transition:all .2s;border-left:3px solid transparent;}
+.side-item:hover,.side-item.active{background:#f0f9ff;color:#38bdf8;border-left-color:#38bdf8;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:1.5rem;}
+.stat{background:#fff;border:1px solid #e2e8f0;padding:1.25rem;}
+.stat-val{font-family:'League Spartan',sans-serif;font-size:1.75rem;font-weight:800;color:#38bdf8;margin-bottom:.2rem;}
+.stat-label{font-size:.68rem;color:#64748b;text-transform:uppercase;letter-spacing:.06em;}
+.table-card{background:#fff;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:1.5rem;}
+.table-hdr{padding:1rem 1.25rem;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
+.table-hdr h3{font-family:'League Spartan',sans-serif;font-size:.9rem;font-weight:700;}
+.add-btn{background:#38bdf8;color:#fff;border:none;padding:.45rem 1rem;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;text-decoration:none;display:inline-block;}
+table{width:100%;border-collapse:collapse;}
+th{padding:.65rem 1.1rem;text-align:left;font-size:.65rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #e2e8f0;background:#f8fafc;}
+td{padding:.65rem 1.1rem;font-size:.82rem;border-bottom:1px solid #f1f5f9;color:#475569;vertical-align:middle;}
+tr:last-child td{border:none;}
+.badge{font-size:.63rem;font-weight:700;padding:2px 8px;}
+.s-approved{color:#16a34a;background:#dcfce7;}
+.s-pending{color:#d97706;background:#fef3c7;}
+.s-rejected{color:#dc2626;background:#fef2f2;}
+.stripe-banner{background:#f0f9ff;border:1.5px solid #bae6fd;padding:1.25rem;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;}
+.stripe-banner p{font-size:.85rem;color:#0369a1;}
+.stripe-btn{background:#635bff;color:#fff;border:none;padding:.55rem 1.25rem;font-size:.82rem;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;white-space:nowrap;}
+.dash-section{display:none;}
+.dash-section.active{display:block;}
+.empty{padding:2rem;text-align:center;color:#64748b;font-size:.85rem;}
+.prod-thumb{width:36px;height:36px;object-fit:cover;border:1px solid #e2e8f0;border-radius:8px;}
+.pf-field{margin-bottom:1rem;}
+.pf-field label{display:block;font-size:.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;}
+.pf-field input,.pf-field textarea,.pf-field select{width:100%;border:1.5px solid #e2e8f0;padding:.65rem .9rem;font-size:.9rem;outline:none;font-family:'Manrope',sans-serif;color:#0f172a;transition:border-color .2s;border-radius:10px;}
+.pf-field input:focus,.pf-field textarea:focus,.pf-field select:focus{border-color:#38bdf8;}
+.pf-field textarea{resize:vertical;min-height:90px;}
+.pf-upload-btn{display:inline-block;background:#38bdf8;color:#fff;padding:.55rem 1.1rem;font-size:.82rem;font-weight:700;cursor:pointer;border-radius:10px;}
+.pf-upload-btn:hover{background:#0ea5e9;}
+.pf-save{background:#38bdf8;color:#fff;border:none;padding:.7rem 1.5rem;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;border-radius:10px;}
+.pf-save:hover{background:#0ea5e9;}
+.edit-link{color:#38bdf8;cursor:pointer;font-weight:600;font-size:.78rem;}
+</style>
+</head>
+<body>
+<div id="navMount"></div>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="side-profile">
+      <div class="side-avatar" id="sideAv">S</div>
+      <div class="side-name" id="sideName">Seller</div>
+      <div class="side-role">Seller Account</div>
+    </div>
+    <div class="side-nav">
+      <div class="side-item active" onclick="show('overview',this)">Dashboard</div>
+      <div class="side-item" onclick="show('products',this)">My Products</div>
+      <div class="side-item" onclick="show('orders',this)">Orders</div>
+      <div class="side-item" onclick="show('profile',this)">My Profile</div>
+      <div class="side-item" onclick="window.location.href='add-product.html'">+ Add Product</div>
+      <div class="side-item" onclick="window.location.href='get-verified.html'" style="color:#38bdf8;font-weight:700;">✓ Get Verified</div>
+      <div class="side-item" onclick="window.location.href='marketplace.html'">View Marketplace</div>
+    </div>
+  </aside>
+  <div>
+    <div class="dash-section active" id="sec-overview">
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-val" id="ovProds">0</div><div class="stat-label">Live Products</div></div>
+        <div class="stat"><div class="stat-val" id="ovPending">0</div><div class="stat-label">Pending</div></div>
+        <div class="stat"><div class="stat-val" style="color:#16a34a" id="ovRevenue">$0</div><div class="stat-label">Revenue</div></div>
+        <div class="stat"><div class="stat-val" id="ovOrders">0</div><div class="stat-label">Orders</div></div>
+      </div>
+      <div class="stripe-banner">
+        <p><strong>Connect Stripe</strong> to receive automatic payouts when your products sell.</p>
+        <button class="stripe-btn" onclick="alert('Stripe Connect coming soon. Email reyhlejackson3@gmail.com to get set up.')">Connect Stripe</button>
+      </div>
+    </div>
+    <div class="dash-section" id="sec-products">
+      <div class="table-card">
+        <div class="table-hdr"><h3>My Products</h3><a href="add-product.html" class="add-btn">+ Add Product</a></div>
+        <table><thead><tr><th>Photo</th><th>Name</th><th>Type</th><th>Price</th><th>Views (30d)</th><th>Status</th><th></th></tr></thead>
+        <tbody id="prodTable"><tr><td colspan="7" class="empty">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+    <div class="dash-section" id="sec-orders">
+      <div class="table-card">
+        <div class="table-hdr"><h3>Orders</h3></div>
+        <table><thead><tr><th>Product</th><th>Amount</th><th>Payout (85%)</th><th>Date</th></tr></thead>
+        <tbody id="ordersTable"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+    <div class="dash-section" id="sec-profile">
+      <div class="table-card">
+        <div class="table-hdr"><h3>My Public Profile</h3><span style="font-size:.72rem;color:#64748b;">This is what buyers see on your seller page</span></div>
+        <div style="padding:1.5rem;">
+          <div style="display:flex;gap:1.5rem;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;">
+            <div style="position:relative;">
+              <div id="pfAvatar" style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0284c7);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'League Spartan',sans-serif;font-weight:800;font-size:2rem;overflow:hidden;background-size:cover;background-position:center;"></div>
+            </div>
+            <div>
+              <label class="pf-upload-btn">Change Photo<input type="file" id="pfPhotoInput" accept="image/*" onchange="handlePfPhoto(event)" style="display:none;"></label>
+              <p style="font-size:.72rem;color:#94a3b8;margin-top:.4rem;">JPG or PNG, square works best</p>
+            </div>
+          </div>
+          <div class="pf-field"><label>Display Name</label><input type="text" id="pfName" placeholder="Your name or business name"></div>
+          <div class="pf-field"><label>Account Description</label><textarea id="pfDesc" placeholder="Tell buyers about yourself and what you build..."></textarea></div>
+          <button class="pf-save" onclick="saveProfile()">Save Profile</button>
+          <a id="pfViewLink" href="#" style="margin-left:1rem;font-size:.82rem;color:#38bdf8;text-decoration:none;">View public profile →</a>
+          <div id="pfMsg" style="font-size:.82rem;margin-top:.75rem;display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PRODUCT MODAL -->
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#fff;border-radius:16px;max-width:440px;width:100%;padding:1.75rem;max-height:90vh;overflow-y:auto;">
+    <h3 style="font-family:'League Spartan',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:1.25rem;">Edit Product</h3>
+    <div class="pf-field"><label>Implementation Fee ($)</label><input type="number" id="edFee" min="0"></div>
+    <div class="pf-field"><label>Implementation Time</label><input type="text" id="edTime" placeholder="e.g. 3–5 business days"></div>
+    <div class="pf-field"><label>Product Type</label><select id="edType"></select></div>
+    <div style="display:flex;gap:.65rem;margin-top:1rem;">
+      <button class="pf-save" style="flex:1;" onclick="saveProductEdit()">Save</button>
+      <button onclick="closeEdit()" style="flex:1;background:#f1f5f9;color:#475569;border:none;padding:.7rem;border-radius:10px;font-family:'Manrope',sans-serif;font-weight:600;cursor:pointer;">Cancel</button>
+    </div>
+    <div id="edMsg" style="font-size:.82rem;margin-top:.65rem;display:none;"></div>
+  </div>
+</div>
+<script>
+let currentUser = null;
+let currentProfile = null;
+let myProducts = [];
+let pfPhotoUrl = null;
+let editingProductId = null;
+
+async function init() {
+  document.getElementById('navStyles').textContent = NAV_CSS;
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'auth.html'; return; }
+  currentUser = session.user;
+  if (currentUser.email === ADMIN_EMAIL) { window.location.href = 'owner-dashboard.html'; return; }
+  currentProfile = await getProfile(currentUser.id);
+  document.getElementById('navMount').innerHTML = buildNav(currentUser, currentProfile);
+  updateCartCount();
+  const name = currentProfile?.display_name || currentProfile?.full_name || currentUser.email.split('@')[0];
+  document.getElementById('sideName').textContent = name;
+  document.getElementById('sideAv').textContent = name.charAt(0).toUpperCase();
+
+  // Populate edit-modal type dropdown
+  const edType = document.getElementById('edType');
+  PRODUCT_TYPES.forEach(t => { const o = document.createElement('option'); o.value=t; o.textContent=t; edType.appendChild(o); });
+
+  // Fill profile section
+  document.getElementById('pfName').value = currentProfile?.display_name || currentProfile?.full_name || '';
+  document.getElementById('pfDesc').value = currentProfile?.account_description || '';
+  pfPhotoUrl = currentProfile?.photo_url || null;
+  renderPfAvatar(name);
+  document.getElementById('pfViewLink').href = 'profile.html?id=' + currentUser.id;
+
+  await loadData();
+}
+
+function renderPfAvatar(name) {
+  const av = document.getElementById('pfAvatar');
+  if (pfPhotoUrl) { av.style.backgroundImage = `url(${pfPhotoUrl})`; av.textContent = ''; }
+  else { av.style.backgroundImage = ''; av.textContent = (name||'S').charAt(0).toUpperCase(); }
+}
+
+async function loadData() {
+  const [pRes, oRes] = await Promise.all([
+    sb.from('products').select('*').eq('seller_id', currentUser.id),
+    sb.from('orders').select('*, products(name)').eq('seller_id', currentUser.id)
+  ]);
+  myProducts = pRes.data || [];
+  const orders = oRes.data || [];
+  const live = myProducts.filter(p => p.status === 'approved').length;
+  const pending = myProducts.filter(p => p.status === 'pending').length;
+  const revenue = orders.reduce((s,o) => s + (o.seller_payout || 0), 0);
+  document.getElementById('ovProds').textContent = live;
+  document.getElementById('ovPending').textContent = pending;
+  document.getElementById('ovRevenue').textContent = '$' + revenue.toFixed(0);
+  document.getElementById('ovOrders').textContent = orders.length;
+
+  // Render product rows first (with placeholder views), then fill in 30-day counts
+  document.getElementById('prodTable').innerHTML = myProducts.length ? myProducts.map(p => `
+    <tr>
+      <td>${p.photo_url ? `<img src="${p.photo_url}" class="prod-thumb">` : '—'}</td>
+      <td>${p.name}</td>
+      <td>${p.product_type || '—'}</td>
+      <td>$${p.price}/${p.price_type}</td>
+      <td id="views-${p.id}">…</td>
+      <td><span class="badge s-${p.status}">${p.status}</span></td>
+      <td><span class="edit-link" onclick="openEdit('${p.id}')">Edit</span></td>
+    </tr>`).join('') : '<tr><td colspan="7" class="empty">No products yet. <a href="add-product.html" style="color:#38bdf8;">Add one →</a></td></tr>';
+
+  // Fill 30-day view counts
+  myProducts.forEach(async p => {
+    const c = await countRecentViews(p.id, 30);
+    const cell = document.getElementById('views-' + p.id);
+    if (cell) cell.textContent = c;
+  });
+
+  document.getElementById('ordersTable').innerHTML = orders.length ? orders.map(o => `
+    <tr><td>${o.products?.name || '—'}</td><td>$${o.amount}</td><td style="color:#16a34a;">$${(o.seller_payout||0).toFixed(2)}</td><td>${new Date(o.created_at).toLocaleDateString()}</td></tr>`).join('') : '<tr><td colspan="4" class="empty">No orders yet</td></tr>';
+}
+
+async function handlePfPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const msg = document.getElementById('pfMsg');
+  msg.style.display = 'block'; msg.style.color = '#0284c7'; msg.textContent = 'Uploading photo...';
+  try {
+    pfPhotoUrl = await uploadProfilePhoto(file, currentUser.id);
+    renderPfAvatar(document.getElementById('pfName').value || 'S');
+    msg.style.color = '#16a34a'; msg.textContent = 'Photo uploaded — click Save Profile to keep it.';
+  } catch (err) {
+    msg.style.color = '#dc2626'; msg.textContent = 'Upload failed: ' + err.message;
+  }
+}
+
+async function saveProfile() {
+  const msg = document.getElementById('pfMsg');
+  const display_name = document.getElementById('pfName').value.trim();
+  const account_description = document.getElementById('pfDesc').value.trim();
+  msg.style.display = 'block'; msg.style.color = '#0284c7'; msg.textContent = 'Saving...';
+  const { error } = await sb.from('profiles').update({
+    display_name, account_description, photo_url: pfPhotoUrl
+  }).eq('id', currentUser.id);
+  if (error) { msg.style.color = '#dc2626'; msg.textContent = 'Error: ' + error.message; return; }
+  msg.style.color = '#16a34a'; msg.textContent = 'Profile saved!';
+  document.getElementById('sideName').textContent = display_name || currentUser.email.split('@')[0];
+}
+
+function openEdit(productId) {
+  const p = myProducts.find(x => x.id === productId);
+  if (!p) return;
+  editingProductId = productId;
+  document.getElementById('edFee').value = (p.implementation_fee != null ? p.implementation_fee : (p.setup_fee || 0));
+  document.getElementById('edTime').value = p.implementation_time || '';
+  document.getElementById('edType').value = p.product_type || '';
+  document.getElementById('edMsg').style.display = 'none';
+  document.getElementById('editModal').style.display = 'flex';
+}
+
+function closeEdit() {
+  document.getElementById('editModal').style.display = 'none';
+  editingProductId = null;
+}
+
+async function saveProductEdit() {
+  const fee = parseFloat(document.getElementById('edFee').value) || 0;
+  const time = document.getElementById('edTime').value.trim();
+  const type = document.getElementById('edType').value;
+  const msg = document.getElementById('edMsg');
+  if (fee < 0) { msg.style.display='block'; msg.style.color='#dc2626'; msg.textContent='Fee must be 0 or more'; return; }
+  if (!time) { msg.style.display='block'; msg.style.color='#dc2626'; msg.textContent='Implementation time is required'; return; }
+  msg.style.display='block'; msg.style.color='#0284c7'; msg.textContent='Saving...';
+  const { error } = await sb.from('products').update({
+    implementation_fee: fee, setup_fee: fee, implementation_time: time, product_type: type, category: [type]
+  }).eq('id', editingProductId).eq('seller_id', currentUser.id);
+  if (error) { msg.style.color='#dc2626'; msg.textContent='Error: '+error.message; return; }
+  msg.style.color='#16a34a'; msg.textContent='Saved!';
+  await loadData();
+  setTimeout(closeEdit, 700);
+}
+
+function show(name, el) {
+  document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.side-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  el.classList.add('active');
+}
+init();
+</script>
+</body>
+</html>
