@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seller Dashboard — Shiftable</title>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style id="navStyles"></style>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;}
+.layout{max-width:1100px;margin:0 auto;padding:2rem;display:grid;grid-template-columns:200px 1fr;gap:2rem;}
+@media(max-width:700px){.layout{grid-template-columns:1fr;}}
+.sidebar{background:#fff;border:1px solid #e2e8f0;height:fit-content;}
+.side-profile{padding:1.25rem;border-bottom:1px solid #e2e8f0;text-align:center;}
+.side-avatar{width:50px;height:50px;background:linear-gradient(135deg,#38bdf8,#0284c7);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'League Spartan',sans-serif;font-weight:800;font-size:1.1rem;color:#fff;margin:0 auto .6rem;}
+.side-name{font-family:'League Spartan',sans-serif;font-weight:700;font-size:.9rem;margin-bottom:.15rem;}
+.side-role{font-size:.62rem;color:#38bdf8;text-transform:uppercase;letter-spacing:.08em;font-family:'DM Mono',monospace;}
+.side-nav{padding:.4rem 0;}
+.side-item{display:flex;align-items:center;gap:.5rem;padding:.55rem 1.1rem;font-size:.83rem;color:#475569;cursor:pointer;transition:all .2s;border-left:3px solid transparent;}
+.side-item:hover,.side-item.active{background:#f0f9ff;color:#38bdf8;border-left-color:#38bdf8;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:1.5rem;}
+.stat{background:#fff;border:1px solid #e2e8f0;padding:1.25rem;}
+.stat-val{font-family:'League Spartan',sans-serif;font-size:1.75rem;font-weight:800;color:#38bdf8;margin-bottom:.2rem;}
+.stat-label{font-size:.68rem;color:#64748b;text-transform:uppercase;letter-spacing:.06em;}
+.table-card{background:#fff;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:1.5rem;}
+.table-hdr{padding:1rem 1.25rem;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
+.table-hdr h3{font-family:'League Spartan',sans-serif;font-size:.9rem;font-weight:700;}
+.add-btn{background:#38bdf8;color:#fff;border:none;padding:.45rem 1rem;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;text-decoration:none;display:inline-block;}
+table{width:100%;border-collapse:collapse;}
+th{padding:.65rem 1.1rem;text-align:left;font-size:.65rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #e2e8f0;background:#f8fafc;}
+td{padding:.65rem 1.1rem;font-size:.82rem;border-bottom:1px solid #f1f5f9;color:#475569;vertical-align:middle;}
+tr:last-child td{border:none;}
+.badge{font-size:.63rem;font-weight:700;padding:2px 8px;}
+.s-approved{color:#16a34a;background:#dcfce7;}
+.s-pending{color:#d97706;background:#fef3c7;}
+.s-rejected{color:#dc2626;background:#fef2f2;}
+.stripe-banner{background:#f0f9ff;border:1.5px solid #bae6fd;padding:1.25rem;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;}
+.stripe-banner p{font-size:.85rem;color:#0369a1;}
+.stripe-btn{background:#635bff;color:#fff;border:none;padding:.55rem 1.25rem;font-size:.82rem;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;white-space:nowrap;}
+.dash-section{display:none;}
+.dash-section.active{display:block;}
+.empty{padding:2rem;text-align:center;color:#64748b;font-size:.85rem;}
+.prod-thumb{width:36px;height:36px;object-fit:cover;border:1px solid #e2e8f0;}
+</style>
+</head>
+<body>
+<div id="navMount"></div>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="side-profile">
+      <div class="side-avatar" id="sideAv">S</div>
+      <div class="side-name" id="sideName">Seller</div>
+      <div class="side-role">Seller Account</div>
+    </div>
+    <div class="side-nav">
+      <div class="side-item active" onclick="show('overview',this)">Dashboard</div>
+      <div class="side-item" onclick="show('products',this)">My Products</div>
+      <div class="side-item" onclick="window.location.href='add-product.html'">+ Add Product</div>
+      <div class="side-item" onclick="window.location.href='get-verified.html'" style="color:#38bdf8;font-weight:700;">✓ Get Verified</div>
+      <div class="side-item" onclick="window.location.href='marketplace.html'">View Marketplace</div>
+    </div>
+  </aside>
+  <div>
+    <div class="dash-section active" id="sec-overview">
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-val" id="ovProds">0</div><div class="stat-label">Live Products</div></div>
+        <div class="stat"><div class="stat-val" id="ovPending">0</div><div class="stat-label">Pending</div></div>
+        <div class="stat"><div class="stat-val" id="ovViews2">—</div><div class="stat-label">Marketplace Live</div></div>
+        <div class="stat"><div class="stat-val" id="ovViews">0</div><div class="stat-label">Total Views</div></div>
+      </div>
+      <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;padding:1.25rem;margin-bottom:1.5rem;border-radius:12px;">
+        <p style="font-size:.85rem;color:#15803d;"><strong>How payouts work</strong> — When a buyer clicks your product on Shiftable they're sent directly to your website to purchase. You handle payments on your end and keep everything. No fees, no Stripe needed.</p>
+      </div>
+    </div>
+    <div class="dash-section" id="sec-products">
+      <div class="table-card">
+        <div class="table-hdr"><h3>My Products</h3><a href="add-product.html" class="add-btn">+ Add Product</a></div>
+        <table><thead><tr><th>Photo</th><th>Name</th><th>Website</th><th>Views</th><th>Status</th></tr></thead>
+        <tbody id="prodTable"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+let currentUser = null;
+async function init() {
+  document.getElementById('navStyles').textContent = NAV_CSS;
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'auth.html'; return; }
+  currentUser = session.user;
+  if (currentUser.email === ADMIN_EMAIL) { window.location.href = 'owner-dashboard.html'; return; }
+  const profile = await getProfile(currentUser.id);
+  document.getElementById('navMount').innerHTML = buildNav(currentUser, profile);
+  updateCartCount();
+  const name = profile?.full_name || currentUser.email.split('@')[0];
+  document.getElementById('sideName').textContent = name;
+  document.getElementById('sideAv').textContent = name.charAt(0).toUpperCase();
+  await loadData();
+}
+async function loadData() {
+  const { data: products } = await sb.from('products').select('*').eq('seller_id', currentUser.id);
+  const prods = products || [];
+  const live = prods.filter(p => p.status === 'approved').length;
+  const pending = prods.filter(p => p.status === 'pending').length;
+  const totalViews = prods.reduce((s,p) => s + (p.view_count || 0), 0);
+  document.getElementById('ovProds').textContent = live;
+  document.getElementById('ovPending').textContent = pending;
+  document.getElementById('ovViews').textContent = totalViews;
+  document.getElementById('prodTable').innerHTML = prods.length ? prods.map(p => `
+    <tr>
+      <td>${p.photo_url ? `<img src="${p.photo_url}" class="prod-thumb">` : '—'}</td>
+      <td>${p.name}</td>
+      <td>${p.product_website ? `<a href="${p.product_website}" target="_blank" style="color:#38bdf8;font-size:.78rem;">Visit ↗</a>` : '—'}</td>
+      <td>${p.view_count || 0} views</td>
+      <td><span class="badge s-${p.status}">${p.status}</span></td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">No products yet. <a href="add-product.html" style="color:#38bdf8;">Add one →</a></td></tr>';
+}
+function show(name, el) {
+  document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.side-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  el.classList.add('active');
+}
+init();
+</script>
+</body>
+</html>
