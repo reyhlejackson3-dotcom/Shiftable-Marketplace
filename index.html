@@ -11,12 +11,12 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;min-height:100vh;overflow-x:hidden;}
-
+ 
 /* SUB NAV */
 .sub-nav{background:#1e293b;padding:.45rem 2rem;display:flex;gap:2rem;overflow-x:auto;}
 .sub-nav a{font-size:.78rem;color:#94a3b8;text-decoration:none;white-space:nowrap;padding:.2rem 0;transition:color .2s;}
 .sub-nav a:hover{color:#fff;}
-
+ 
 /* HERO */
 .hero{background:linear-gradient(135deg,#0b1120 0%,#0f2040 40%,#0b1120 100%);padding:5rem 2rem 4rem;text-align:center;position:relative;overflow:hidden;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(56,189,248,.12),transparent 70%);pointer-events:none;}
@@ -29,7 +29,7 @@ body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;min-heigh
 .btn-hero:hover{background:#0ea5e9;transform:translateY(-2px);box-shadow:0 8px 24px rgba(56,189,248,.3);}
 .btn-hero-ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.2);padding:.9rem 2.25rem;font-family:'Manrope',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block;}
 .btn-hero-ghost:hover{border-color:#38bdf8;color:#38bdf8;}
-
+ 
 /* MAKE THE SHIFT TRANSITION */
 .shift-transition{background:#0f172a;padding:0;overflow:hidden;position:relative;height:280px;display:flex;align-items:center;justify-content:center;}
 .shift-inner{text-align:center;position:relative;z-index:2;}
@@ -44,26 +44,26 @@ body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;min-heigh
 .shift-transition.visible .shift-words,
 .shift-transition.visible .shift-sub,
 .shift-transition.visible .shift-line{opacity:1;transform:none;}
-
+ 
 /* SCROLL HINT */
 .scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.4rem;z-index:3;opacity:.5;}
 .scroll-hint span{font-size:.68rem;color:#94a3b8;font-family:'DM Mono',monospace;letter-spacing:.12em;text-transform:uppercase;}
 .scroll-arrow{width:20px;height:20px;border-right:2px solid #38bdf8;border-bottom:2px solid #38bdf8;transform:rotate(45deg);animation:scrollBounce 1.5s infinite;}
 @keyframes scrollBounce{0%,100%{transform:rotate(45deg) translateY(0);}50%{transform:rotate(45deg) translateY(5px);}}
-
+ 
 /* CATEGORY BAR */
 .cat-bar{background:#fff;border-bottom:1px solid #e2e8f0;padding:1rem 2rem;}
 .cat-inner{max-width:1280px;margin:0 auto;display:flex;gap:.75rem;overflow-x:auto;align-items:center;}
 .cat-item{display:flex;align-items:center;gap:.4rem;padding:.45rem 1rem;cursor:pointer;border:1.5px solid transparent;transition:all .2s;flex-shrink:0;font-size:.82rem;font-weight:600;color:#475569;}
 .cat-item:hover,.cat-item.active{border-color:#38bdf8;background:#f0f9ff;color:#0284c7;}
 .cat-dot{width:8px;height:8px;border-radius:50%;background:#38bdf8;}
-
+ 
 /* MAIN */
 .main{max-width:1280px;margin:0 auto;padding:2rem;}
 .sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;}
 .sh-title{font-family:'League Spartan',sans-serif;font-size:1.35rem;font-weight:800;color:#0f172a;}
 .sh-link{font-size:.82rem;color:#38bdf8;text-decoration:none;font-weight:600;}
-
+ 
 /* PRODUCT GRID */
 .products-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;margin-bottom:3rem;}
 .pcard{background:#fff;border:1px solid #e2e8f0;transition:box-shadow .25s,border-color .25s,transform .25s;cursor:pointer;display:flex;flex-direction:column;overflow:hidden;}
@@ -85,7 +85,7 @@ body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;min-heigh
 .pc-cart:hover{background:#0ea5e9;}
 .pc-view{background:transparent;color:#64748b;border:1.5px solid #e2e8f0;padding:.65rem .85rem;font-size:.82rem;cursor:pointer;font-family:'Manrope',sans-serif;transition:all .2s;}
 .pc-view:hover{border-color:#38bdf8;color:#38bdf8;}
-
+ 
 /* SYSTEMS BANNER */
 .systems-banner{background:#0f172a;padding:2.5rem;margin-bottom:3rem;display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center;border-left:3px solid #38bdf8;}
 .sb-tag{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.18em;color:#38bdf8;text-transform:uppercase;margin-bottom:.5rem;}
@@ -93,7 +93,7 @@ body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;min-heigh
 .sb-sub{font-size:.85rem;color:#94a3b8;max-width:400px;line-height:1.65;}
 .sb-btn{background:#38bdf8;color:#fff;border:none;padding:.85rem 2rem;font-family:'Manrope',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-block;transition:all .2s;}
 .sb-btn:hover{background:#0ea5e9;transform:translateY(-1px);}
-
+ 
 /* FOOTER */
 footer{background:#0f172a;color:#94a3b8;padding:3rem 2rem;margin-top:2rem;}
 .footer-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:2rem;}
@@ -105,10 +105,11 @@ footer{background:#0f172a;color:#94a3b8;padding:3rem 2rem;margin-top:2rem;}
 .footer-bottom p{font-size:.75rem;}
 .footer-slogan{font-family:'DM Mono',monospace;font-size:.7rem;color:#38bdf8;letter-spacing:.12em;}
 </style>
+<script type="text/javascript">(function(i,m,p,a,c,t){c.ire_o=p;c[p]=c[p]||function(){(c[p].a=c[p].a||[]).push(arguments)};t=a.createElement(m);var z=a.getElementsByTagName(m)[0];t.async=1;t.src=i;z.parentNode.insertBefore(t,z)})('https://utt.impactcdn.com/P-A7402464-3758-487f-ac54-d68baacf0f061.js','script','impactStat',document,window);impactStat('transformLinks');impactStat('trackImpression');</script>
 </head>
 <body>
 <div id="navMount"></div>
-
+ 
 <div class="sub-nav">
   <a href="shiftable-systems.html">Shiftable Systems</a>
   <a href="marketplace.html?cat=trade">Trade Business</a>
@@ -118,7 +119,7 @@ footer{background:#0f172a;color:#94a3b8;padding:3rem 2rem;margin-top:2rem;}
   <a href="consulting.html">Consulting</a>
   <a href="auth.html?tab=signup&type=seller">Sell on Shiftable</a>
 </div>
-
+ 
 <div class="hero" id="heroSection">
   <canvas id="heroCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
   <div style="position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;pointer-events:none;">
@@ -138,7 +139,7 @@ footer{background:#0f172a;color:#94a3b8;padding:3rem 2rem;margin-top:2rem;}
     <div class="scroll-arrow"></div>
   </div>
 </div>
-
+ 
 <!-- MAKE THE SHIFT TRANSITION -->
 <div class="shift-transition" id="shiftTransition">
   <div class="shift-line top"></div>
@@ -149,7 +150,7 @@ footer{background:#0f172a;color:#94a3b8;padding:3rem 2rem;margin-top:2rem;}
   </div>
   <div class="shift-line bottom"></div>
 </div>
-
+ 
 <div class="cat-bar">
   <div class="cat-inner">
     <div class="cat-item active" onclick="filterCat('all',this)"><div class="cat-dot"></div>All Systems</div>
@@ -160,7 +161,7 @@ footer{background:#0f172a;color:#94a3b8;padding:3rem 2rem;margin-top:2rem;}
     <div class="cat-item" onclick="filterCat('bundle',this)"><div class="cat-dot"></div>Bundles</div>
   </div>
 </div>
-
+ 
 <div class="main">
   <div class="systems-banner">
     <div>
@@ -170,14 +171,14 @@ footer{background:#0f172a;color:#94a3b8;padding:3rem 2rem;margin-top:2rem;}
     </div>
     <a href="shiftable-systems.html" class="sb-btn">Shop Collection →</a>
   </div>
-
+ 
   <div class="sh">
     <div class="sh-title" id="productsTitle">Featured AI Systems</div>
     <a href="marketplace.html" class="sh-link">See all →</a>
   </div>
   <div class="products-row" id="productsGrid"><div style="grid-column:1/-1;text-align:center;padding:3rem;color:#64748b;">Loading...</div></div>
 </div>
-
+ 
 <footer>
   <div class="footer-inner">
     <div class="footer-logo">
@@ -208,10 +209,10 @@ footer{background:#0f172a;color:#94a3b8;padding:3rem 2rem;margin-top:2rem;}
     <div class="footer-slogan">MAKE THE SHIFT</div>
   </div>
 </footer>
-
+ 
 <script>
 let allProducts = [];
-
+ 
 async function init() {
   document.getElementById('navStyles').textContent = NAV_CSS;
   const { data: { session } } = await sb.auth.getSession();
@@ -223,7 +224,7 @@ async function init() {
   allProducts = data || [];
   renderProducts(allProducts);
 }
-
+ 
 function filterCat(cat, el) {
   document.querySelectorAll('.cat-item').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
@@ -231,7 +232,7 @@ function filterCat(cat, el) {
   document.getElementById('productsTitle').textContent = cat === 'all' ? 'Featured AI Systems' : cat.charAt(0).toUpperCase() + cat.slice(1) + ' Systems';
   renderProducts(filtered);
 }
-
+ 
 function renderProducts(products) {
   const grid = document.getElementById('productsGrid');
   if (!products.length) { grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#64748b;">No products found</div>`; return; }
@@ -257,7 +258,7 @@ function renderProducts(products) {
     </div>
   `).join('');
 }
-
+ 
 // MAKE THE SHIFT INTERSECTION OBSERVER
 const shiftObs = new IntersectionObserver((entries) => {
   entries.forEach(e => {
@@ -268,7 +269,7 @@ const shiftObs = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.4 });
 shiftObs.observe(document.getElementById('shiftTransition'));
-
+ 
 // PARTICLE CANVAS
 (function(){
   const canvas = document.getElementById('heroCanvas');
@@ -301,7 +302,7 @@ shiftObs.observe(document.getElementById('shiftTransition'));
   resize(); initParticles(); animate();
   window.addEventListener('resize',()=>{ resize(); initParticles(); });
 })();
-
+ 
 init();
 </script>
 </body>
