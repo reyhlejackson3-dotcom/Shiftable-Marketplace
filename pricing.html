@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Listing Plans — Shiftable</title>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style id="navStyles"></style>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;}
+.page-hero{background:#0f172a;padding:3.5rem 2rem;text-align:center;}
+.page-hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.75rem,4vw,2.5rem);font-weight:700;color:#fff;margin-bottom:.5rem;}
+.page-hero p{color:#94a3b8;font-size:.95rem;max-width:520px;margin:0 auto;}
+.wrap{max-width:1000px;margin:0 auto;padding:3rem 2rem;}
+
+/* AFFILIATE BANNER */
+.affiliate-banner{background:#fff;border:1.5px solid #38bdf8;border-radius:16px;padding:1.5rem 2rem;margin-bottom:2.5rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;}
+.ab-icon{width:48px;height:48px;background:#f0f9ff;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ab-icon svg{width:24px;height:24px;color:#38bdf8;}
+.ab-content h3{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;margin-bottom:.25rem;}
+.ab-content p{font-size:.85rem;color:#64748b;line-height:1.6;}
+.ab-badge{background:#38bdf8;color:#fff;font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:999px;white-space:nowrap;margin-left:auto;}
+
+/* PLANS */
+.plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-bottom:3rem;}
+@media(max-width:768px){.plans-grid{grid-template-columns:1fr;}}
+.plan{background:#fff;border:1.5px solid #e2e8f0;border-radius:18px;padding:2rem;display:flex;flex-direction:column;position:relative;transition:box-shadow .2s,border-color .2s;}
+.plan.featured{border-color:#38bdf8;box-shadow:0 0 0 4px rgba(56,189,248,.08);}
+.plan-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#38bdf8;color:#fff;font-size:.68rem;font-weight:800;padding:3px 14px;border-radius:999px;white-space:nowrap;letter-spacing:.05em;}
+.plan-name{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:.4rem;}
+.plan-price{font-family:'League Spartan',sans-serif;font-size:2.5rem;font-weight:900;color:#0f172a;line-height:1;}
+.plan-per{font-size:.8rem;color:#94a3b8;margin-bottom:1.25rem;}
+.plan-desc{font-size:.82rem;color:#64748b;line-height:1.6;margin-bottom:1.5rem;flex:1;}
+.plan-features{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.75rem;}
+.plan-feat{display:flex;align-items:flex-start;gap:.6rem;font-size:.82rem;color:#475569;}
+.pf-check{width:18px;height:18px;border-radius:50%;background:#38bdf8;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.pf-check svg{width:10px;height:10px;color:#fff;}
+.plan-btn{background:#38bdf8;color:#fff;border:none;padding:.8rem;font-family:'Manrope',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;border-radius:10px;transition:background .2s;text-align:center;text-decoration:none;display:block;}
+.plan-btn:hover{background:#0ea5e9;}
+.plan-btn.ghost{background:#f1f5f9;color:#475569;}
+.plan-btn.ghost:hover{background:#e2e8f0;}
+
+/* AFFILIATE INFO */
+.section-title{font-family:'Space Grotesk',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:1.25rem;color:#0f172a;}
+.info-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:1.5rem;margin-bottom:1rem;}
+.info-card h4{font-family:'Space Grotesk',sans-serif;font-size:.95rem;font-weight:700;margin-bottom:.5rem;}
+.info-card p{font-size:.85rem;color:#64748b;line-height:1.65;}
+
+/* COMING SOON OVERLAY */
+.cs-note{display:inline-block;background:#fef3c7;color:#d97706;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;margin-bottom:.75rem;}
+</style>
+</head>
+<body>
+<div id="navMount"></div>
+
+<div class="page-hero">
+  <h1>List on <span style="color:#38bdf8;">Shiftable</span></h1>
+  <p>Choose how you want to list your AI product. Affiliate partners list for free. Everyone else picks a plan.</p>
+</div>
+
+<div class="wrap">
+
+  <!-- AFFILIATE BANNER -->
+  <div class="affiliate-banner">
+    <div class="ab-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 21H3a1 1 0 01-1-1V4a1 1 0 011-1h18a1 1 0 011 1v9M16 3v4M8 3v4M3 11h18M19 15l2 2 4-4"/></svg>
+    </div>
+    <div class="ab-content">
+      <h3>Have an affiliate program? List for free.</h3>
+      <p>If your product has an affiliate program paying a minimum 15% commission we'll list it at no charge. We earn when you earn — no monthly fees, no upfront cost.</p>
+    </div>
+    <div class="ab-badge">Free with affiliate</div>
+  </div>
+
+  <!-- PLANS -->
+  <div class="section-title">Or choose a listing plan</div>
+  <div class="plans-grid">
+
+    <!-- BASIC -->
+    <div class="plan">
+      <div class="plan-name">Basic</div>
+      <div class="plan-price">$99</div>
+      <div class="plan-per">/month</div>
+      <div class="plan-desc">Get your product in front of business owners actively searching for AI tools. Clean listing with all the essentials.</div>
+      <div class="plan-features">
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Product listed in marketplace</div>
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Name, description, photo, link</div>
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Shows in category search</div>
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Monthly click analytics</div>
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Seller dashboard access</div>
+      </div>
+      <div class="cs-note">⏳ Payments coming soon</div>
+      <a href="add-product.html" class="plan-btn ghost">Submit Product →</a>
+    </div>
+
+    <!-- FEATURED -->
+    <div class="plan featured">
+      <div class="plan-badge">MOST POPULAR</div>
+      <div class="plan-name">Featured</div>
+      <div class="plan-price">$199</div>
+      <div class="plan-per">/month</div>
+      <div class="plan-desc">Stand out from the crowd. Featured listings appear at the top of their category and rotate on the Shiftable homepage.</div>
+      <div class="plan-features">
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Everything in Basic</div>
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Priority placement in category</div>
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Homepage rotation</div>
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Highlighted in search results</div>
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Advanced click analytics</div>
+      </div>
+      <div class="cs-note">⏳ Payments coming soon</div>
+      <a href="add-product.html" class="plan-btn">Submit Product →</a>
+    </div>
+
+    <!-- PREMIUM -->
+    <div class="plan">
+      <div class="plan-name">Premium</div>
+      <div class="plan-price">$299</div>
+      <div class="plan-per">/month</div>
+      <div class="plan-desc">Maximum exposure. We actively promote your product to our buyer audience through email, social, and content.</div>
+      <div class="plan-features">
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Everything in Featured</div>
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Shiftable Verified badge consideration</div>
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Included in buyer email newsletter</div>
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Featured in social content</div>
+        <div class="plan-feat"><div class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>Direct promotion to buyer audience</div>
+      </div>
+      <div class="cs-note">⏳ Payments coming soon</div>
+      <a href="add-product.html" class="plan-btn ghost">Submit Product →</a>
+    </div>
+
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="section-title">How it works</div>
+  <div class="info-card">
+    <h4>Submit your product</h4>
+    <p>Fill out the product submission form with your name, description, photo, and website. Our team reviews every submission before it goes live.</p>
+  </div>
+  <div class="info-card">
+    <h4>We set up your listing</h4>
+    <p>Once approved your product goes live on the Shiftable marketplace where business owners actively search for AI tools. If you have an affiliate program we connect it to your listing.</p>
+  </div>
+  <div class="info-card">
+    <h4>Buyers find you</h4>
+    <p>Business owners browse the marketplace, click your listing, and land directly on your website ready to buy. You handle the sale — we handle the discovery.</p>
+  </div>
+
+</div>
+
+<script>
+async function init() {
+  document.getElementById('navStyles').textContent = NAV_CSS;
+  const { data: { session } } = await sb.auth.getSession();
+  const user = session?.user || null;
+  const profile = user ? await getProfile(user.id) : null;
+  document.getElementById('navMount').innerHTML = buildNav(user, profile);
+  if (user) updateCartCount();
+}
+init();
+</script>
+</body>
+</html>
