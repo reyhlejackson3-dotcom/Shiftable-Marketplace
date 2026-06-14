@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Product — Shiftable</title>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:.75rem 2rem;background:#0f172a;}
+.logo{text-decoration:none;display:flex;align-items:center;}
+.logo-shift{font-family:'League Spartan',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;}
+.logo-able{font-family:'League Spartan',sans-serif;font-size:1.5rem;font-weight:800;color:#38bdf8;}
+.logo-up{font-size:.9rem;color:#38bdf8;position:relative;top:-3px;margin-left:1px;}
+.back-btn{font-size:.82rem;color:#94a3b8;text-decoration:none;border:1.5px solid #334155;padding:.4rem .85rem;}
+.back-btn:hover{color:#fff;}
+
+.page-wrap{max-width:760px;margin:2.5rem auto;padding:0 2rem;}
+.page-header{margin-bottom:2rem;}
+.page-header h1{font-family:'League Spartan',sans-serif;font-size:2rem;font-weight:800;margin-bottom:.35rem;}
+.page-header p{font-size:.9rem;color:#64748b;}
+
+.req-banner{background:#f0f9ff;border:1.5px solid #bae6fd;padding:1rem 1.25rem;margin-bottom:2rem;}
+.req-banner h4{font-family:'League Spartan',sans-serif;font-size:.88rem;font-weight:700;color:#0284c7;margin-bottom:.35rem;}
+.req-banner ul{padding-left:1rem;}
+.req-banner li{font-size:.82rem;color:#0369a1;line-height:1.7;}
+
+.form-card{background:#fff;border:1px solid #e2e8f0;padding:2rem;}
+.form-section{margin-bottom:2rem;padding-bottom:2rem;border-bottom:1px solid #e2e8f0;}
+.form-section:last-child{border:none;margin-bottom:0;}
+.form-section h3{font-family:'League Spartan',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.25rem;}
+.field{margin-bottom:1.1rem;}
+.field label{display:block;font-size:.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;}
+.field label .req{color:#ef4444;margin-left:2px;}
+.field input,.field textarea,.field select{width:100%;border:1.5px solid #e2e8f0;padding:.65rem .9rem;font-size:.9rem;outline:none;font-family:'Manrope',sans-serif;color:#0f172a;transition:border-color .2s;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:#38bdf8;}
+.field input.invalid{border-color:#ef4444;}
+.field textarea{resize:vertical;min-height:100px;}
+.field-hint{font-size:.75rem;color:#94a3b8;margin-top:.3rem;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+@media(max-width:500px){.frow{grid-template-columns:1fr;}}
+
+/* PHOTO UPLOAD */
+.photo-upload{border:2px dashed #e2e8f0;padding:2rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.photo-upload:hover{border-color:#38bdf8;background:#f0f9ff;}
+.photo-upload.has-photo{border-style:solid;border-color:#38bdf8;padding:0;overflow:hidden;}
+.photo-upload input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.photo-upload-icon{width:40px;height:40px;margin:0 auto .75rem;color:#94a3b8;}
+.photo-upload-icon svg{width:100%;height:100%;}
+.photo-upload-text{font-size:.85rem;font-weight:600;color:#475569;margin-bottom:.25rem;}
+.photo-upload-hint{font-size:.75rem;color:#94a3b8;}
+.photo-preview{width:100%;height:200px;object-fit:cover;display:none;}
+.photo-preview.visible{display:block;}
+.photo-remove{position:absolute;top:.5rem;right:.5rem;background:#ef4444;color:#fff;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.85rem;display:none;z-index:2;}
+.photo-upload.has-photo .photo-remove{display:flex;align-items:center;justify-content:center;}
+
+/* FEATURES */
+.features-wrap{}
+.feature-row{display:flex;gap:.5rem;margin-bottom:.5rem;}
+.feature-row input{flex:1;border:1.5px solid #e2e8f0;padding:.5rem .75rem;font-size:.85rem;outline:none;font-family:'Manrope',sans-serif;transition:border-color .2s;}
+.feature-row input:focus{border-color:#38bdf8;}
+.feature-remove{background:#fef2f2;color:#ef4444;border:1px solid #fecaca;width:34px;cursor:pointer;font-size:.9rem;flex-shrink:0;}
+.add-feat-btn{background:transparent;color:#38bdf8;border:1.5px dashed #38bdf8;padding:.45rem 1rem;font-size:.8rem;cursor:pointer;width:100%;font-family:'Manrope',sans-serif;font-weight:600;margin-top:.35rem;transition:background .2s;}
+.add-feat-btn:hover{background:#f0f9ff;}
+
+/* CATEGORIES */
+.cat-checks{display:flex;flex-wrap:wrap;gap:.5rem;}
+.cat-check{display:flex;align-items:center;gap:.4rem;border:1.5px solid #e2e8f0;padding:.4rem .85rem;cursor:pointer;transition:all .2s;user-select:none;}
+.cat-check:has(input:checked){border-color:#38bdf8;background:#f0f9ff;color:#0284c7;}
+.cat-check input{accent-color:#38bdf8;}
+.cat-check span{font-size:.82rem;font-weight:500;}
+
+/* STRIPE CONNECT SECTION */
+.stripe-section{background:#f8fafc;border:1.5px solid #e2e8f0;padding:1.5rem;}
+.stripe-connected-badge{display:flex;align-items:center;gap:.5rem;font-size:.88rem;color:#16a34a;font-weight:600;margin-bottom:.75rem;}
+.stripe-not-connected{display:flex;align-items:center;gap:.5rem;font-size:.88rem;color:#dc2626;font-weight:600;margin-bottom:.75rem;}
+.stripe-connect-btn{background:#635bff;color:#fff;border:none;padding:.65rem 1.5rem;font-family:'Manrope',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;transition:background .2s;display:inline-flex;align-items:center;gap:.5rem;}
+.stripe-connect-btn:hover{background:#4f46e5;}
+
+/* PRICE PREVIEW */
+.price-preview{background:#f0f9ff;border:1px solid #bae6fd;padding:1rem;margin-top:.75rem;font-size:.85rem;color:#0369a1;}
+.price-preview strong{color:#0f172a;font-family:'League Spartan',sans-serif;}
+
+.submit-btn{width:100%;background:#38bdf8;color:#fff;border:none;padding:1rem;font-family:'Manrope',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:background .2s;margin-top:1.5rem;}
+.submit-btn:hover{background:#0ea5e9;}
+.submit-btn:disabled{background:#94a3b8;cursor:not-allowed;}
+.form-msg{font-size:.85rem;text-align:center;margin-top:.75rem;padding:.7rem;font-weight:500;display:none;}
+.form-msg.error{color:#dc2626;background:#fef2f2;}
+.form-msg.success{color:#16a34a;background:#f0fdf4;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="logo"><img src="logo.png" alt="Shiftable" style="height:36px;width:auto;"></a>
+  <a href="seller-dashboard.html" class="back-btn">← Dashboard</a>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <h1>List a Product</h1>
+    <p>Submit your AI product to the Shiftable marketplace.</p>
+  </div>
+
+  <div class="req-banner">
+    <h4>How listing works</h4>
+    <ul>
+      <li>Submit your product name, description, photo, and website</li>
+      <li>Our team reviews it and sets up tracking</li>
+      <li>Once approved, your product goes live on the marketplace</li>
+      <li>Buyers who click through are sent straight to your site</li>
+    </ul>
+  </div>
+
+  <div class="form-card">
+
+    <!-- PRODUCT WEBSITE -->
+    <div class="form-section">
+      <h3>Where do buyers go?</h3>
+      <div class="field">
+        <label>Product Website URL <span class="req">*</span></label>
+        <input type="url" id="prodWebsite" placeholder="https://yourproduct.com">
+        <div class="field-hint">When a buyer clicks your product on Shiftable, this is where they'll be sent to learn more and purchase. Make sure it's the page where people can actually buy or sign up.</div>
+      </div>
+    </div>
+
+    <!-- BASIC INFO -->
+    <div class="form-section">
+      <h3>Product Information</h3>
+      <div class="field">
+        <label>Product Name <span class="req">*</span></label>
+        <input type="text" id="prodName" placeholder="e.g. AI Lead Qualifier for Roofing Companies">
+      </div>
+      <div class="field">
+        <label>Description <span class="req">*</span></label>
+        <textarea id="prodDesc" placeholder="Describe what your product does, who it's for, and what problem it solves."></textarea>
+      </div>
+      <div class="field">
+        <label>Product Photo <span class="req">*</span></label>
+        <div class="photo-upload" id="photoUpload">
+          <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoSelect(event)">
+          <div class="photo-upload-icon" id="photoIcon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div class="photo-upload-text" id="photoText">Click to upload photo</div>
+          <div class="photo-upload-hint" id="photoHint">JPG, PNG, or WebP — recommended 800×500px</div>
+          <img class="photo-preview" id="photoPreview" alt="Preview">
+          <button class="photo-remove" id="photoRemove" onclick="removePhoto(event)">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="form-section">
+      <h3>Features</h3>
+      <div class="features-wrap" id="featuresWrap"></div>
+      <button class="add-feat-btn" onclick="addFeature()">+ Add Feature</button>
+    </div>
+
+    <!-- PRICING -->
+    <div class="form-section">
+      <h3>Pricing</h3>
+      <div class="frow">
+        <div class="field">
+          <label>Price <span class="req">*</span></label>
+          <input type="number" id="prodPrice" placeholder="e.g. 49" min="0">
+          <div class="field-hint">Your product's price. Shown on the marketplace card so buyers know what to expect.</div>
+        </div>
+        <div class="field">
+          <label>Billing Type</label>
+          <select id="prodPriceType">
+            <option value="month">Monthly</option>
+            <option value="year">Yearly</option>
+            <option value="one-time">One-Time</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- CATEGORIES -->
+    <div class="form-section">
+      <h3>Categories <span style="font-size:.75rem;color:#94a3b8;font-weight:400;">(select all that apply)</span></h3>
+      <div class="cat-checks">
+        <label class="cat-check"><input type="checkbox" value="customer-support"><span>Customer Support</span></label>
+        <label class="cat-check"><input type="checkbox" value="sales-crm"><span>Sales & CRM</span></label>
+        <label class="cat-check"><input type="checkbox" value="marketing"><span>Marketing & Advertising</span></label>
+        <label class="cat-check"><input type="checkbox" value="finance"><span>Finance & Accounting</span></label>
+        <label class="cat-check"><input type="checkbox" value="hr-recruiting"><span>HR & Recruiting</span></label>
+        <label class="cat-check"><input type="checkbox" value="project-management"><span>Project Management</span></label>
+        <label class="cat-check"><input type="checkbox" value="analytics"><span>Data & Analytics</span></label>
+        <label class="cat-check"><input type="checkbox" value="legal-compliance"><span>Legal & Compliance</span></label>
+        <label class="cat-check"><input type="checkbox" value="operations"><span>Operations</span></label>
+        <label class="cat-check"><input type="checkbox" value="ecommerce"><span>E-Commerce</span></label>
+        <label class="cat-check"><input type="checkbox" value="agents-bots"><span>AI Agents & Bots</span></label>
+        <label class="cat-check"><input type="checkbox" value="automation"><span>Automation & Workflows</span></label>
+        <label class="cat-check"><input type="checkbox" value="content-generation"><span>Content Generation</span></label>
+        <label class="cat-check"><input type="checkbox" value="voice-phone"><span>Voice & Phone AI</span></label>
+        <label class="cat-check"><input type="checkbox" value="image-video"><span>Image & Video AI</span></label>
+        <label class="cat-check"><input type="checkbox" value="data-scraping"><span>Data Extraction & Scraping</span></label>
+        <label class="cat-check"><input type="checkbox" value="coding-dev"><span>Coding & Development</span></label>
+        <label class="cat-check"><input type="checkbox" value="research"><span>Research & Intelligence</span></label>
+        <label class="cat-check"><input type="checkbox" value="scheduling"><span>Scheduling & Booking</span></label>
+        <label class="cat-check"><input type="checkbox" value="document-processing"><span>Document Processing</span></label>
+      </div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitProduct()">Submit Product →</button>
+    <div class="form-msg" id="formMsg"></div>
+  </div>
+</div>
+
+<script>
+let currentUser = null;
+let selectedPhotoFile = null;
+let featureCount = 0;
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'auth.html'; return; }
+  currentUser = session.user;
+  const profile = await getProfile(session.user.id);
+  if (!profile || (profile.account_type !== 'seller' && profile.account_type !== 'both' && session.user.email !== ADMIN_EMAIL)) {
+    alert('You need a seller account to add products.');
+    window.location.href = 'auth.html?tab=signup&type=seller';
+    return;
+  }
+  addFeature(); addFeature(); addFeature();
+}
+
+function handlePhotoSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  selectedPhotoFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const preview = document.getElementById('photoPreview');
+    preview.src = ev.target.result;
+    preview.classList.add('visible');
+    document.getElementById('photoUpload').classList.add('has-photo');
+    document.getElementById('photoIcon').style.display = 'none';
+    document.getElementById('photoText').style.display = 'none';
+    document.getElementById('photoHint').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePhoto(e) {
+  e.stopPropagation();
+  selectedPhotoFile = null;
+  document.getElementById('photoPreview').src = '';
+  document.getElementById('photoPreview').classList.remove('visible');
+  document.getElementById('photoUpload').classList.remove('has-photo');
+  document.getElementById('photoIcon').style.display = '';
+  document.getElementById('photoText').style.display = '';
+  document.getElementById('photoHint').style.display = '';
+  document.getElementById('photoInput').value = '';
+}
+
+function addFeature() {
+  featureCount++;
+  const wrap = document.getElementById('featuresWrap');
+  const row = document.createElement('div');
+  row.className = 'feature-row';
+  row.id = 'feat-' + featureCount;
+  row.innerHTML = `<input type="text" placeholder="e.g. 24/7 automated responses"><button class="feature-remove" onclick="this.parentElement.remove()">✕</button>`;
+  wrap.appendChild(row);
+}
+
+async function submitProduct() {
+  const name = document.getElementById('prodName').value.trim();
+  const desc = document.getElementById('prodDesc').value.trim();
+  const website = document.getElementById('prodWebsite').value.trim();
+  const price = parseFloat(document.getElementById('prodPrice').value) || null;
+  const priceType = document.getElementById('prodPriceType').value;
+  const msg = document.getElementById('formMsg');
+  const btn = document.getElementById('submitBtn');
+
+  // Validate required fields
+  if (!name) { showMsg(msg, 'Product name is required', 'error'); return; }
+  if (!desc) { showMsg(msg, 'Description is required', 'error'); return; }
+  if (!selectedPhotoFile) { showMsg(msg, 'A product photo is required', 'error'); return; }
+  if (!website || !/^https?:\/\//.test(website)) { showMsg(msg, 'Please enter a valid website URL starting with http:// or https://', 'error'); return; }
+
+  const features = [...document.querySelectorAll('.feature-row input')].map(i => i.value.trim()).filter(Boolean);
+  const categories = [...document.querySelectorAll('.cat-checks input:checked')].map(c => c.value);
+
+  btn.disabled = true;
+  showMsg(msg, 'Uploading photo...', '');
+
+  let photoUrl = null;
+  try {
+    photoUrl = await uploadProductPhoto(selectedPhotoFile);
+  } catch(e) {
+    showMsg(msg, 'Photo upload failed: ' + e.message, 'error');
+    btn.disabled = false;
+    return;
+  }
+
+  showMsg(msg, 'Submitting product...', '');
+
+  const { error } = await sb.from('products').insert({
+    seller_id: currentUser.id,
+    name, description: desc,
+    features,
+    category: categories,
+    photo_url: photoUrl,
+    product_website: website,
+    price,
+    price_type: priceType,
+    is_shiftable_original: false,
+    status: 'pending'
+  });
+
+  if (error) {
+    showMsg(msg, 'Error: ' + error.message, 'error');
+    btn.disabled = false;
+    return;
+  }
+
+  showMsg(msg, '✓ Submitted! Our team will review your product and set up tracking. You\'ll be notified once it\'s live.', 'success');
+  setTimeout(() => window.location.href = 'seller-dashboard.html', 2500);
+}
+
+function showMsg(el, text, type) {
+  el.textContent = text;
+  el.className = 'form-msg' + (type ? ' ' + type : '');
+  el.style.display = 'block';
+}
+
+init();
+</script>
+</body>
+</html>
