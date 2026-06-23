@@ -15,7 +15,13 @@ body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;}
 .page-header h1{font-family:'League Spartan',sans-serif;font-size:1.75rem;font-weight:800;margin-bottom:.25rem;}
 .page-header p{color:#94a3b8;font-size:.88rem;}
 .layout{max-width:1280px;margin:0 auto;padding:2rem;display:grid;grid-template-columns:240px 1fr;gap:2rem;}
-@media(max-width:768px){.layout{grid-template-columns:1fr;}}
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr;padding:1rem;}
+  .sidebar{display:none;}
+  .sidebar.filter-open{display:block;}
+  .filter-toggle{display:flex;align-items:center;gap:.5rem;background:#38bdf8;color:#fff;border:none;padding:.65rem 1.25rem;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;border-radius:10px;margin-bottom:1rem;width:100%;}
+}
+@media(min-width:769px){.filter-toggle{display:none;}}
 
 /* SIDEBAR */
 .sidebar{background:#fff;border:1px solid #e2e8f0;padding:1.5rem;height:fit-content;}
@@ -59,7 +65,9 @@ body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;}
 .pc-cart:hover{background:#0ea5e9;}
 .pc-view{background:transparent;color:#475569;border:1.5px solid #e2e8f0;padding:.5rem .65rem;font-size:.78rem;cursor:pointer;font-family:'Manrope',sans-serif;transition:all .2s;}
 .pc-view:hover{border-color:#38bdf8;color:#38bdf8;}
-.empty{text-align:center;padding:4rem;color:#64748b;grid-column:1/-1;}
+.af-spinner{width:32px;height:32px;border:3px solid #1e293b;border-top-color:#38bdf8;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
 </style>
 </head>
 <body>
@@ -70,6 +78,11 @@ body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;}
   <p>Browse all verified AI systems from Shiftable and independent sellers</p>
 </div>
 
+<div style="max-width:1280px;margin:0 auto;padding:1rem 2rem 0;">
+  <button class="filter-toggle" onclick="document.querySelector('.sidebar').classList.toggle('filter-open')">
+    ☰ Filters
+  </button>
+</div>
 <div class="layout">
   <aside class="sidebar">
     <h3>Filter</h3>
@@ -124,13 +137,92 @@ body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;}
   <div>
     <div class="sort-bar">
       <span id="resultCount">Loading...</span>
-      <select class="sort-select" id="sortSelect" onchange="applyFilters()">
-        <option value="newest">Newest First</option>
-        <option value="price-low">Price: Low to High</option>
-        <option value="price-high">Price: High to Low</option>
-        <option value="name">Name A–Z</option>
-      </select>
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <button onclick="document.getElementById('mktFinderWrap').style.display=document.getElementById('mktFinderWrap').style.display==='none'?'block':'none'" style="background:#38bdf8;color:#fff;border:none;padding:.4rem .9rem;font-family:'Manrope',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;border-radius:8px;">✨ Find My Tool</button>
+        <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+          <option value="newest">Newest First</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </div>
     </div>
+
+    <!-- COMPACT AI FINDER -->
+    <div id="mktFinderWrap" style="display:none;background:#0f172a;border-radius:16px;padding:1.5rem;margin-bottom:1.25rem;">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;color:#fff;margin-bottom:1rem;">Find your perfect AI tool in 4 questions</div>
+      <div class="af-steps" id="mktAfSteps" style="justify-content:flex-start;margin-bottom:1.25rem;">
+        <div class="af-step active" id="mkt-step-1">1</div>
+        <div class="af-step-line"></div>
+        <div class="af-step" id="mkt-step-2">2</div>
+        <div class="af-step-line"></div>
+        <div class="af-step" id="mkt-step-3">3</div>
+        <div class="af-step-line"></div>
+        <div class="af-step" id="mkt-step-4">4</div>
+      </div>
+      <div id="mktAfQuestions">
+        <div class="af-q active" id="mq1">
+          <div class="af-q-label">Step 1 of 4</div>
+          <div class="af-q-title">What type of business do you run?</div>
+          <div class="af-options">
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq1')">Contractor / Trade</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq1')">Retail / E-Commerce</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq1')">Professional Services</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq1')">Healthcare</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq1')">Restaurant / Hospitality</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq1')">Real Estate</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq1')">Tech / SaaS</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq1')">Other</button>
+          </div>
+          <button class="af-next" id="mnext1" onclick="mktNextStep(1)" disabled>Next →</button>
+        </div>
+        <div class="af-q" id="mq2">
+          <div class="af-q-label">Step 2 of 4</div>
+          <div class="af-q-title">What's your biggest time drain?</div>
+          <div class="af-options">
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq2')">Answering calls and bookings</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq2')">Quotes and estimates</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq2')">Following up with leads</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq2')">Invoices and payments</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq2')">Content and marketing</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq2')">Customer support</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq2')">Data entry</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq2')">Scheduling</button>
+          </div>
+          <button class="af-next" id="mnext2" onclick="mktNextStep(2)" disabled>Next →</button>
+        </div>
+        <div class="af-q" id="mq3">
+          <div class="af-q-label">Step 3 of 4</div>
+          <div class="af-q-title">How many employees?</div>
+          <div class="af-options">
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq3')">Just me</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq3')">2 to 5</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq3')">6 to 20</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq3')">21 to 50</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq3')">50 plus</button>
+          </div>
+          <button class="af-next" id="mnext3" onclick="mktNextStep(3)" disabled>Next →</button>
+        </div>
+        <div class="af-q" id="mq4">
+          <div class="af-q-label">Step 4 of 4</div>
+          <div class="af-q-title">Monthly budget for tools?</div>
+          <div class="af-options">
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq4')">Under $50</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq4')">$50 to $150</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq4')">$150 to $500</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq4')">$500 plus</button>
+            <button class="af-opt" onclick="mktSelectOpt(this,'mq4')">Not sure</button>
+          </div>
+          <button class="af-next" id="mnext4" onclick="mktGetRecs()" disabled>Find My Tools →</button>
+        </div>
+      </div>
+      <div id="mktAfLoading" style="display:none;text-align:center;padding:1.5rem;">
+        <div class="af-spinner"></div>
+        <div style="font-size:.82rem;color:#64748b;margin-top:.5rem;">Finding your best matches...</div>
+      </div>
+      <div id="mktAfResults" style="display:none;"></div>
+    </div>
+
     <div class="products-grid" id="productsGrid"></div>
   </div>
 </div>
@@ -240,6 +332,83 @@ async function trackAndVisit(productId, url) {
     await sb.from('product_clicks').insert({ product_id: productId });
   } catch(e) {}
   window.open(url, '_blank', 'noopener');
+}
+
+// MARKETPLACE AI FINDER
+const ANTHROPIC_API_KEY = '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';
+const mktAnswers = {};
+
+function mktSelectOpt(btn, qId) {
+  document.querySelectorAll(`#${qId} .af-opt`).forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  mktAnswers[qId] = btn.textContent;
+  document.getElementById(`mnext${qId.replace('mq','')}`).disabled = false;
+}
+
+function mktNextStep(step) {
+  document.getElementById(`mq${step}`).classList.remove('active');
+  document.getElementById(`mq${step+1}`).classList.add('active');
+  document.getElementById(`mkt-step-${step}`).classList.remove('active');
+  document.getElementById(`mkt-step-${step}`).classList.add('done');
+  document.getElementById(`mkt-step-${step+1}`).classList.add('active');
+}
+
+async function mktGetRecs() {
+  document.getElementById('mktAfQuestions').style.display = 'none';
+  document.getElementById('mktAfSteps').style.display = 'none';
+  document.getElementById('mktAfLoading').style.display = 'block';
+
+  const productList = allProducts.map(p => `ID:${p.id} | Name:${p.name} | Price:${p.price ? '$'+p.price+'/'+p.price_type : 'See pricing'} | Description:${(p.description||'').substring(0,100)}`).join('\n');
+
+  const prompt = `You are a helpful AI product advisor for Shiftable marketplace.
+
+Business owner answers:
+1. Business type: ${mktAnswers.mq1}
+2. Biggest time drain: ${mktAnswers.mq2}
+3. Employees: ${mktAnswers.mq3}
+4. Budget: ${mktAnswers.mq4}
+
+Available products:
+${productList}
+
+Recommend 3 PERFECT FIT and 2 SEMI FIT products. Return ONLY valid JSON:
+{"perfect":[{"id":"...","reason":"..."},{"id":"...","reason":"..."},{"id":"...","reason":"..."}],"semi":[{"id":"...","reason":"..."},{"id":"...","reason":"..."}]}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_API_KEY,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:800,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await res.json();
+    const raw = data.content[0].text.trim().replace(/```json|```/g,'').trim();
+    const result = JSON.parse(raw);
+    localStorage.setItem('shiftable_last_recs', JSON.stringify({answers:mktAnswers, result, timestamp:Date.now()}));
+    mktRenderResults(result);
+  } catch(e) {
+    document.getElementById('mktAfLoading').style.display = 'none';
+    document.getElementById('mktAfQuestions').style.display = 'block';
+    document.getElementById('mktAfSteps').style.display = 'flex';
+  }
+}
+
+function mktRenderResults(result) {
+  document.getElementById('mktAfLoading').style.display = 'none';
+  const container = document.getElementById('mktAfResults');
+  const renderCard = (item, type) => {
+    const p = allProducts.find(x => x.id === item.id);
+    if (!p) return '';
+    const dest = p.affiliate_link || p.product_website || `product.html?id=${p.id}`;
+    return `<div class="af-rec-card">
+      <span class="af-rec-badge ${type}">${type==='perfect'?'⭐ Perfect Fit':'✓ Semi Fit'}</span>
+      <div class="af-rec-name">${p.name}</div>
+      <div class="af-rec-reason">${item.reason}</div>
+      <div class="af-rec-price">${p.price?'$'+p.price+'/'+p.price_type:'See pricing'}</div>
+      <a href="${dest}" target="_blank" rel="noopener" class="af-rec-btn">Visit Site →</a>
+    </div>`;
+  };
+  container.innerHTML = '<div style="margin-top:.75rem;">' + result.perfect.map(i=>renderCard(i,'perfect')).join('') + result.semi.map(i=>renderCard(i,'semi')).join('') + '<button onclick="location.reload()" style="margin-top:.75rem;background:transparent;color:#38bdf8;border:1.5px solid #38bdf8;padding:.4rem .9rem;font-family:Manrope,sans-serif;font-size:.78rem;cursor:pointer;border-radius:8px;">Start Over</button></div>';
+  container.style.display = 'block';
 }
 
 init();
