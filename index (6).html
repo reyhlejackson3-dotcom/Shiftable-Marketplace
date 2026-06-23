@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shiftable — Make the Shift</title>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&family=DM+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style id="navStyles"></style>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0f4f8;color:#0f172a;font-family:'Manrope',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* SUB NAV */
+.sub-nav{background:#1e293b;padding:.45rem 2rem;display:flex;gap:2rem;overflow-x:auto;}
+.sub-nav a{font-size:.78rem;color:#94a3b8;text-decoration:none;white-space:nowrap;padding:.2rem 0;transition:color .2s;}
+.sub-nav a:hover{color:#fff;}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#0b1120 0%,#0f2040 40%,#0b1120 100%);padding:5rem 2rem 4rem;text-align:center;position:relative;overflow:hidden;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(56,189,248,.12),transparent 70%);pointer-events:none;}
+.hero-logo{display:flex;align-items:center;justify-content:center;margin-bottom:2.5rem;border:none;background:none;padding:0;position:relative;z-index:2;}
+.hero-h{font-family:'League Spartan',sans-serif;font-size:clamp(1.5rem,3.5vw,2.75rem);font-weight:800;color:#fff;margin-bottom:1rem;letter-spacing:-.02em;line-height:1.2;position:relative;z-index:2;}
+.hero-h span{color:#38bdf8;}
+.hero-sub{font-size:.95rem;color:#94a3b8;max-width:480px;margin:0 auto 2.5rem;line-height:1.7;position:relative;z-index:2;}
+.hero-acts{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;position:relative;z-index:2;}
+.btn-hero{background:#38bdf8;color:#fff;border:none;padding:.9rem 2.25rem;font-family:'Manrope',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block;}
+.btn-hero:hover{background:#0ea5e9;transform:translateY(-2px);box-shadow:0 8px 24px rgba(56,189,248,.3);}
+.btn-hero-ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.2);padding:.9rem 2.25rem;font-family:'Manrope',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block;}
+.btn-hero-ghost:hover{border-color:#38bdf8;color:#38bdf8;}
+
+/* MAKE THE SHIFT TRANSITION */
+/* AI FINDER */
+.ai-finder-section{background:#0f172a;padding:3rem 2rem;}
+.ai-finder-wrap{max-width:700px;margin:0 auto;}
+.af-header{text-align:center;margin-bottom:2rem;}
+.af-tag{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.2em;color:#38bdf8;text-transform:uppercase;margin-bottom:.75rem;}
+.af-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.5rem,3.5vw,2rem);font-weight:700;color:#fff;margin-bottom:.6rem;}
+.af-sub{font-size:.88rem;color:#94a3b8;line-height:1.7;max-width:520px;margin:0 auto;}
+.af-steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:2rem;}
+.af-step{width:32px;height:32px;border-radius:50%;background:#1e293b;border:2px solid #334155;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#64748b;transition:all .3s;}
+.af-step.active{background:#38bdf8;border-color:#38bdf8;color:#fff;}
+.af-step.done{background:#0284c7;border-color:#0284c7;color:#fff;}
+.af-step-line{width:40px;height:2px;background:#1e293b;}
+.af-q{display:none;}
+.af-q.active{display:block;}
+.af-q-label{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.15em;color:#38bdf8;text-transform:uppercase;margin-bottom:.5rem;}
+.af-q-title{font-family:'Space Grotesk',sans-serif;font-size:1.15rem;font-weight:700;color:#fff;margin-bottom:.35rem;}
+.af-q-hint{font-size:.82rem;color:#64748b;margin-bottom:1.25rem;}
+.af-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.6rem;margin-bottom:1.25rem;}
+.af-opt{background:#1e293b;border:1.5px solid #334155;color:#94a3b8;padding:.7rem 1rem;font-family:'Manrope',sans-serif;font-size:.82rem;cursor:pointer;text-align:left;transition:all .2s;border-radius:10px;}
+.af-opt:hover{border-color:#38bdf8;color:#fff;}
+.af-opt.selected{background:rgba(56,189,248,.1);border-color:#38bdf8;color:#38bdf8;font-weight:600;}
+.af-next{background:#38bdf8;color:#fff;border:none;padding:.75rem 2rem;font-family:'Manrope',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;border-radius:10px;transition:all .2s;}
+.af-next:hover{background:#0ea5e9;}
+.af-next:disabled{background:#1e293b;color:#475569;cursor:not-allowed;}
+.af-loading{text-align:center;padding:3rem;}
+.af-spinner{width:40px;height:40px;border:3px solid #1e293b;border-top-color:#38bdf8;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.af-loading-text{font-size:.88rem;color:#64748b;}
+.af-results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+.af-results-title{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;color:#fff;}
+.af-restart{background:transparent;color:#38bdf8;border:1.5px solid #38bdf8;padding:.4rem .9rem;font-family:'Manrope',sans-serif;font-size:.78rem;cursor:pointer;border-radius:8px;}
+.af-rec-card{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:1.25rem;transition:border-color .2s;margin-bottom:.85rem;}
+.af-rec-card:hover{border-color:#38bdf8;}
+.af-rec-badge{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:999px;margin-bottom:.6rem;display:inline-block;}
+.af-rec-badge.perfect{background:rgba(74,222,128,.1);color:#4ade80;}
+.af-rec-badge.semi{background:rgba(251,191,36,.1);color:#fbbf24;}
+.af-rec-name{font-family:'League Spartan',sans-serif;font-size:1rem;font-weight:700;color:#fff;margin-bottom:.35rem;}
+.af-rec-reason{font-size:.78rem;color:#64748b;line-height:1.55;margin-bottom:.85rem;}
+.af-rec-price{font-size:.82rem;color:#38bdf8;font-weight:600;margin-bottom:.75rem;}
+.af-rec-btn{display:block;text-align:center;background:#38bdf8;color:#fff;text-decoration:none;padding:.6rem;font-family:'Manrope',sans-serif;font-size:.82rem;font-weight:700;border-radius:8px;transition:background .2s;}
+.af-rec-btn:hover{background:#0ea5e9;}
+.af-past{text-align:center;margin-top:1rem;}
+.af-past-btn{background:transparent;color:#64748b;border:1px solid #334155;padding:.5rem 1.25rem;font-family:'Manrope',sans-serif;font-size:.78rem;cursor:pointer;border-radius:8px;transition:all .2s;}
+.af-past-btn:hover{color:#38bdf8;border-color:#38bdf8;}
+
+/* SCROLL HINT */
+.scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.4rem;z-index:3;opacity:.5;}
+.scroll-hint span{font-size:.68rem;color:#94a3b8;font-family:'DM Mono',monospace;letter-spacing:.12em;text-transform:uppercase;}
+.scroll-arrow{width:20px;height:20px;border-right:2px solid #38bdf8;border-bottom:2px solid #38bdf8;transform:rotate(45deg);animation:scrollBounce 1.5s infinite;}
+@keyframes scrollBounce{0%,100%{transform:rotate(45deg) translateY(0);}50%{transform:rotate(45deg) translateY(5px);}}
+
+/* CATEGORY BAR */
+.cat-bar{background:#fff;border-bottom:1px solid #e2e8f0;padding:1rem 2rem;}
+.cat-inner{max-width:1280px;margin:0 auto;display:flex;gap:.75rem;overflow-x:auto;align-items:center;}
+.cat-item{display:flex;align-items:center;gap:.4rem;padding:.45rem 1rem;cursor:pointer;border:1.5px solid transparent;transition:all .2s;flex-shrink:0;font-size:.82rem;font-weight:600;color:#475569;}
+.cat-item:hover,.cat-item.active{border-color:#38bdf8;background:#f0f9ff;color:#0284c7;}
+.cat-dot{width:8px;height:8px;border-radius:50%;background:#38bdf8;}
+
+/* MAIN */
+.main{max-width:1280px;margin:0 auto;padding:2rem;}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;}
+.sh-title{font-family:'League Spartan',sans-serif;font-size:1.35rem;font-weight:800;color:#0f172a;}
+.sh-link{font-size:.82rem;color:#38bdf8;text-decoration:none;font-weight:600;}
+
+/* PRODUCT GRID */
+.products-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;margin-bottom:3rem;}
+.pcard{background:#fff;border:1px solid #e2e8f0;transition:box-shadow .25s,border-color .25s,transform .25s;cursor:pointer;display:flex;flex-direction:column;overflow:hidden;}
+.pcard:hover{box-shadow:0 12px 40px rgba(0,0,0,.12);border-color:#38bdf8;transform:translateY(-3px);}
+.pc-img{height:180px;overflow:hidden;position:relative;background:#f0f9ff;flex-shrink:0;}
+.pc-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s;}
+.pcard:hover .pc-img img{transform:scale(1.06);}
+.pc-img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);}
+.pc-img-placeholder svg{width:48px;height:48px;color:#38bdf8;}
+.pc-body{padding:1.35rem;flex:1;display:flex;flex-direction:column;}
+.pc-name{font-family:'League Spartan',sans-serif;font-size:1.05rem;font-weight:700;color:#0f172a;margin-bottom:.25rem;line-height:1.25;}
+.pc-seller{font-size:.72rem;color:#38bdf8;margin-bottom:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.pc-desc{font-size:.82rem;color:#64748b;line-height:1.65;margin-bottom:1rem;flex:1;}
+.pc-price-row{display:flex;align-items:baseline;gap:.3rem;margin-bottom:1rem;padding-top:.85rem;border-top:1px solid #f1f5f9;}
+.pc-price{font-family:'League Spartan',sans-serif;font-size:1.5rem;font-weight:900;color:#0f172a;}
+.pc-per{font-size:.72rem;color:#94a3b8;font-weight:500;}
+.pc-actions{display:flex;gap:.5rem;}
+.pc-cart{flex:1;background:#38bdf8;color:#fff;border:none;padding:.65rem;font-size:.82rem;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;transition:all .2s;}
+.pc-cart:hover{background:#0ea5e9;}
+.pc-view{background:transparent;color:#64748b;border:1.5px solid #e2e8f0;padding:.65rem .85rem;font-size:.82rem;cursor:pointer;font-family:'Manrope',sans-serif;transition:all .2s;}
+.pc-view:hover{border-color:#38bdf8;color:#38bdf8;}
+
+/* SYSTEMS BANNER */
+.systems-banner{background:#0f172a;padding:2.5rem;margin-bottom:3rem;display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center;border-left:3px solid #38bdf8;}
+.sb-tag{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.18em;color:#38bdf8;text-transform:uppercase;margin-bottom:.5rem;}
+.sb-title{font-family:'League Spartan',sans-serif;font-size:1.6rem;font-weight:800;color:#fff;margin-bottom:.4rem;}
+.sb-sub{font-size:.85rem;color:#94a3b8;max-width:400px;line-height:1.65;}
+.sb-btn{background:#38bdf8;color:#fff;border:none;padding:.85rem 2rem;font-family:'Manrope',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-block;transition:all .2s;}
+.sb-btn:hover{background:#0ea5e9;transform:translateY(-1px);}
+
+/* FOOTER */
+footer{background:#0f172a;color:#94a3b8;padding:3rem 2rem;margin-top:2rem;}
+.footer-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:2rem;}
+.footer-logo p{font-size:.8rem;line-height:1.65;margin-top:.5rem;}
+.footer-col h4{font-size:.72rem;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;}
+.footer-col a{display:block;font-size:.8rem;color:#94a3b8;text-decoration:none;margin-bottom:.4rem;transition:color .2s;}
+.footer-col a:hover{color:#38bdf8;}
+.footer-bottom{max-width:1280px;margin:2rem auto 0;padding-top:1.5rem;border-top:1px solid #1e293b;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;}
+.footer-bottom p{font-size:.75rem;}
+.footer-slogan{font-family:'DM Mono',monospace;font-size:.7rem;color:#38bdf8;letter-spacing:.12em;}
+</style>
+</head>
+<body>
+<div id="navMount"></div>
+
+<div class="sub-nav">
+  <a href="shiftable-systems.html">Shiftable Systems</a>
+  <a href="marketplace.html?cat=trade">Trade Business</a>
+  <a href="marketplace.html?cat=automation">Automation</a>
+  <a href="marketplace.html?cat=finance">Finance</a>
+  <a href="marketplace.html?cat=communication">Communication</a>
+  <a href="consulting.html">Consulting</a>
+  <a href="auth.html?tab=signup&type=seller">Sell on Shiftable</a>
+</div>
+
+<div class="hero" id="heroSection">
+  <canvas id="heroCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
+  <div style="position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+    <div style="width:520px;height:520px;border-radius:50%;background:radial-gradient(ellipse,rgba(56,189,248,0.18) 0%,rgba(56,189,248,0.06) 45%,transparent 70%);filter:blur(8px);"></div>
+  </div>
+  <div class="hero-logo">
+    <img src="logo.png" alt="Shiftable" style="height:clamp(200px,28vw,380px);width:auto;max-width:700px;position:relative;z-index:2;">
+  </div>
+  <h1 class="hero-h">The AI Marketplace for <span>Real Businesses</span></h1>
+  <p class="hero-sub">Buy and deploy AI systems built for trade businesses and modern companies. Get live in days, not months.</p>
+  <div class="hero-acts">
+    <a href="marketplace.html" class="btn-hero">Browse Marketplace</a>
+    <a href="shiftable-systems.html" class="btn-hero-ghost">Shiftable Systems</a>
+  </div>
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</div>
+
+<!-- MAKE THE SHIFT TRANSITION -->
+<div class="ai-finder-section" id="aiFinderSection">
+  <div class="ai-finder-wrap">
+    <div class="af-header">
+      <div class="af-tag">AI-Powered</div>
+      <h2 class="af-title">Find Your Perfect AI Tool</h2>
+      <p class="af-sub">Answer 4 quick questions and our AI will recommend the exact tools that fit your business — pulled directly from the Shiftable marketplace.</p>
+    </div>
+
+    <!-- STEP INDICATOR -->
+    <div class="af-steps" id="afSteps">
+      <div class="af-step active" id="step-dot-1">1</div>
+      <div class="af-step-line"></div>
+      <div class="af-step" id="step-dot-2">2</div>
+      <div class="af-step-line"></div>
+      <div class="af-step" id="step-dot-3">3</div>
+      <div class="af-step-line"></div>
+      <div class="af-step" id="step-dot-4">4</div>
+    </div>
+
+    <!-- QUESTIONS -->
+    <div class="af-questions" id="afQuestions">
+
+      <!-- Q1 -->
+      <div class="af-q active" id="q1">
+        <div class="af-q-label">Step 1 of 4</div>
+        <div class="af-q-title">What type of business do you run?</div>
+        <div class="af-q-hint">Select the option that best describes your business.</div>
+        <div class="af-options">
+          <button class="af-opt" onclick="selectOpt(this,'q1')">Contractor / Trade Business</button>
+          <button class="af-opt" onclick="selectOpt(this,'q1')">Retail / E-Commerce</button>
+          <button class="af-opt" onclick="selectOpt(this,'q1')">Professional Services</button>
+          <button class="af-opt" onclick="selectOpt(this,'q1')">Healthcare / Medical</button>
+          <button class="af-opt" onclick="selectOpt(this,'q1')">Restaurant / Hospitality</button>
+          <button class="af-opt" onclick="selectOpt(this,'q1')">Real Estate</button>
+          <button class="af-opt" onclick="selectOpt(this,'q1')">Tech / SaaS</button>
+          <button class="af-opt" onclick="selectOpt(this,'q1')">Other</button>
+        </div>
+        <button class="af-next" id="next1" onclick="nextStep(1)" disabled>Next →</button>
+      </div>
+
+      <!-- Q2 -->
+      <div class="af-q" id="q2">
+        <div class="af-q-label">Step 2 of 4</div>
+        <div class="af-q-title">What's your biggest time drain right now?</div>
+        <div class="af-q-hint">Pick the one that costs you the most time every week.</div>
+        <div class="af-options">
+          <button class="af-opt" onclick="selectOpt(this,'q2')">Answering calls and booking appointments</button>
+          <button class="af-opt" onclick="selectOpt(this,'q2')">Creating quotes and estimates</button>
+          <button class="af-opt" onclick="selectOpt(this,'q2')">Following up with leads</button>
+          <button class="af-opt" onclick="selectOpt(this,'q2')">Managing invoices and payments</button>
+          <button class="af-opt" onclick="selectOpt(this,'q2')">Creating content and marketing</button>
+          <button class="af-opt" onclick="selectOpt(this,'q2')">Customer support and emails</button>
+          <button class="af-opt" onclick="selectOpt(this,'q2')">Data entry and reporting</button>
+          <button class="af-opt" onclick="selectOpt(this,'q2')">Scheduling and coordination</button>
+        </div>
+        <button class="af-next" id="next2" onclick="nextStep(2)" disabled>Next →</button>
+      </div>
+
+      <!-- Q3 -->
+      <div class="af-q" id="q3">
+        <div class="af-q-label">Step 3 of 4</div>
+        <div class="af-q-title">How many employees do you have?</div>
+        <div class="af-q-hint">This helps us recommend tools scaled to your team size.</div>
+        <div class="af-options">
+          <button class="af-opt" onclick="selectOpt(this,'q3')">Just me</button>
+          <button class="af-opt" onclick="selectOpt(this,'q3')">2 to 5</button>
+          <button class="af-opt" onclick="selectOpt(this,'q3')">6 to 20</button>
+          <button class="af-opt" onclick="selectOpt(this,'q3')">21 to 50</button>
+          <button class="af-opt" onclick="selectOpt(this,'q3')">50 plus</button>
+        </div>
+        <button class="af-next" id="next3" onclick="nextStep(3)" disabled>Next →</button>
+      </div>
+
+      <!-- Q4 -->
+      <div class="af-q" id="q4">
+        <div class="af-q-label">Step 4 of 4</div>
+        <div class="af-q-title">What's your monthly budget for tools?</div>
+        <div class="af-q-hint">We'll only recommend tools within your budget.</div>
+        <div class="af-options">
+          <button class="af-opt" onclick="selectOpt(this,'q4')">Under $50/month</button>
+          <button class="af-opt" onclick="selectOpt(this,'q4')">$50 to $150/month</button>
+          <button class="af-opt" onclick="selectOpt(this,'q4')">$150 to $500/month</button>
+          <button class="af-opt" onclick="selectOpt(this,'q4')">$500 plus/month</button>
+          <button class="af-opt" onclick="selectOpt(this,'q4')">Not sure yet</button>
+        </div>
+        <button class="af-next" id="next4" onclick="getRecommendations()" disabled>Find My AI Tools →</button>
+      </div>
+
+    </div>
+
+    <!-- LOADING -->
+    <div class="af-loading" id="afLoading" style="display:none;">
+      <div class="af-spinner"></div>
+      <div class="af-loading-text">Analyzing your business and searching the marketplace...</div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="af-results" id="afResults" style="display:none;">
+      <div class="af-results-header">
+        <h3 class="af-results-title">Your Recommended AI Tools</h3>
+        <button class="af-restart" onclick="restartFinder()">Start Over</button>
+      </div>
+      <div id="afResultsGrid"></div>
+    </div>
+
+    <!-- PAST CONVERSATIONS -->
+    <div class="af-past" id="afPast" style="display:none;">
+      <button class="af-past-btn" onclick="loadPastConversation()">📋 View Past Recommendations</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="cat-bar">
+  <div class="cat-inner">
+    <div class="cat-item active" onclick="filterCat('all',this)"><div class="cat-dot"></div>All</div>
+    <div class="cat-item" onclick="filterCat('customer-support',this)"><div class="cat-dot"></div>Customer Support</div>
+    <div class="cat-item" onclick="filterCat('sales-crm',this)"><div class="cat-dot"></div>Sales & CRM</div>
+    <div class="cat-item" onclick="filterCat('marketing',this)"><div class="cat-dot"></div>Marketing</div>
+    <div class="cat-item" onclick="filterCat('finance',this)"><div class="cat-dot"></div>Finance</div>
+    <div class="cat-item" onclick="filterCat('hr-recruiting',this)"><div class="cat-dot"></div>HR & Recruiting</div>
+    <div class="cat-item" onclick="filterCat('project-management',this)"><div class="cat-dot"></div>Project Management</div>
+    <div class="cat-item" onclick="filterCat('analytics',this)"><div class="cat-dot"></div>Data & Analytics</div>
+    <div class="cat-item" onclick="filterCat('legal-compliance',this)"><div class="cat-dot"></div>Legal & Compliance</div>
+    <div class="cat-item" onclick="filterCat('operations',this)"><div class="cat-dot"></div>Operations</div>
+    <div class="cat-item" onclick="filterCat('ecommerce',this)"><div class="cat-dot"></div>E-Commerce</div>
+    <div class="cat-item" onclick="filterCat('agents-bots',this)"><div class="cat-dot"></div>AI Agents & Bots</div>
+    <div class="cat-item" onclick="filterCat('automation',this)"><div class="cat-dot"></div>Automation</div>
+    <div class="cat-item" onclick="filterCat('content-generation',this)"><div class="cat-dot"></div>Content Generation</div>
+    <div class="cat-item" onclick="filterCat('voice-phone',this)"><div class="cat-dot"></div>Voice & Phone AI</div>
+    <div class="cat-item" onclick="filterCat('image-video',this)"><div class="cat-dot"></div>Image & Video AI</div>
+    <div class="cat-item" onclick="filterCat('data-scraping',this)"><div class="cat-dot"></div>Data Extraction</div>
+    <div class="cat-item" onclick="filterCat('coding-dev',this)"><div class="cat-dot"></div>Coding & Dev</div>
+    <div class="cat-item" onclick="filterCat('research',this)"><div class="cat-dot"></div>Research</div>
+    <div class="cat-item" onclick="filterCat('scheduling',this)"><div class="cat-dot"></div>Scheduling</div>
+    <div class="cat-item" onclick="filterCat('document-processing',this)"><div class="cat-dot"></div>Document Processing</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="systems-banner">
+    <div>
+      <div class="sb-tag">Featured Collection</div>
+      <div class="sb-title">Shiftable Systems</div>
+      <p class="sb-sub">Our own AI tools built for trade businesses. Proven, implemented, and live in 3–5 days.</p>
+    </div>
+    <a href="shiftable-systems.html" class="sb-btn">Shop Collection →</a>
+  </div>
+
+  <div class="sh">
+    <div class="sh-title" id="productsTitle">Featured AI Systems</div>
+    <a href="marketplace.html" class="sh-link">See all →</a>
+  </div>
+  <div class="products-row" id="productsGrid"><div style="grid-column:1/-1;text-align:center;padding:3rem;color:#64748b;">Loading...</div></div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <img src="logo.png" alt="Shiftable" style="height:36px;width:auto;">
+      <p>The AI marketplace for modern businesses. Buy, sell, and deploy AI systems that actually work.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Marketplace</h4>
+      <a href="marketplace.html">All Products</a>
+      <a href="shiftable-systems.html">Shiftable Systems</a>
+      <a href="consulting.html">Consulting</a>
+    </div>
+    <div class="footer-col">
+      <h4>Sellers</h4>
+      <a href="auth.html?tab=signup&type=seller">Become a Seller</a>
+      <a href="seller-dashboard.html">Dashboard</a>
+      <a href="add-product.html">Add Product</a>
+    </div>
+    <div class="footer-col">
+      <h4>Account</h4>
+      <a href="auth.html">Log In</a>
+      <a href="auth.html?tab=signup">Sign Up</a>
+      <a href="buyer-dashboard.html">My Purchases</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Shiftable. All rights reserved.</p>
+    <div class="footer-slogan">MAKE THE SHIFT</div>
+  </div>
+</footer>
+
+<script>
+let allProducts = [];
+
+async function init() {
+  document.getElementById('navStyles').textContent = NAV_CSS;
+  const { data: { session } } = await sb.auth.getSession();
+  const user = session ? session.user : null;
+  const profile = user ? await getProfile(user.id) : null;
+  document.getElementById('navMount').innerHTML = buildNav(user, profile);
+  if (user) updateCartCount();
+  const { data } = await sb.from('products').select('*').eq('status','approved').order('created_at', { ascending: false });
+  allProducts = data || [];
+  renderProducts(allProducts);
+}
+
+function filterCat(cat, el) {
+  document.querySelectorAll('.cat-item').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const filtered = cat === 'all' ? allProducts : allProducts.filter(p => p.category && p.category.includes(cat));
+  document.getElementById('productsTitle').textContent = cat === 'all' ? 'Featured AI Systems' : cat.charAt(0).toUpperCase() + cat.slice(1) + ' Systems';
+  renderProducts(filtered);
+}
+
+function renderProducts(products) {
+  const grid = document.getElementById('productsGrid');
+  if (!products.length) { grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#64748b;">No products found</div>`; return; }
+  grid.innerHTML = products.map(p => {
+    const dest = p.is_shiftable_original ? `product.html?id=${p.id}` : (p.affiliate_link || p.product_website || `product.html?id=${p.id}`);
+    const priceDisplay = p.price ? `<div class="pc-price">$${p.price}</div><div class="pc-per">${p.price_type ? '/'+p.price_type : ''}</div>` : `<div class="pc-price" style="font-size:.9rem;color:#64748b;">See pricing →</div>`;
+    return `
+    <div class="pcard" onclick="window.location.href='product.html?id=${p.id}'">
+      <div class="pc-img">
+        ${p.photo_url ? `<img src="${p.photo_url}" alt="${p.name}" loading="lazy">` : `<div class="pc-img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>`}
+        ${(p.is_shiftable_verified || p.is_shiftable_original) ? `<span class="sv-badge" style="position:absolute;top:.65rem;left:.65rem;"><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>Shiftable Verified</span>` : ''}
+      </div>
+      <div class="pc-body">
+        <div class="pc-name">${p.name}</div>
+        <div class="pc-desc">${(p.description||'').substring(0,100)}${(p.description||'').length > 100 ? '...' : ''}</div>
+        <div class="pc-price-row">${priceDisplay}</div>
+        <div class="pc-actions" onclick="event.stopPropagation()">
+          <button class="pc-cart" onclick="window.location.href='${dest}'">${p.is_shiftable_original ? 'View Product' : 'Visit Site →'}</button>
+          <button class="pc-view" onclick="window.location.href='product.html?id=${p.id}'">Details</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// AI FINDER
+const ANTHROPIC_API_KEY = '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';
+const answers = {};
+let allProducts = [];
+
+function selectOpt(btn, qId) {
+  document.querySelectorAll(`#${qId} .af-opt`).forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  answers[qId] = btn.textContent;
+  document.getElementById(`next${qId.replace('q','')}`).disabled = false;
+}
+
+function nextStep(step) {
+  document.getElementById(`q${step}`).classList.remove('active');
+  document.getElementById(`q${step+1}`).classList.add('active');
+  document.getElementById(`step-dot-${step}`).classList.remove('active');
+  document.getElementById(`step-dot-${step}`).classList.add('done');
+  document.getElementById(`step-dot-${step+1}`).classList.add('active');
+}
+
+async function getRecommendations() {
+  document.getElementById('afQuestions').style.display = 'none';
+  document.getElementById('afSteps').style.display = 'none';
+  document.getElementById('afLoading').style.display = 'block';
+
+  // Fetch products from Supabase
+  const { data: products } = await sb.from('products').select('id, name, description, price, price_type, photo_url, affiliate_link, product_website, is_shiftable_original, category').eq('status','approved');
+  allProducts = products || [];
+
+  const productList = allProducts.map(p => `ID:${p.id} | Name:${p.name} | Price:${p.price ? '$'+p.price+'/'+p.price_type : 'See pricing'} | Categories:${(p.category||[]).join(',')} | Description:${(p.description||'').substring(0,100)}`).join('\n');
+
+  const prompt = `You are a helpful AI product advisor for Shiftable, an AI marketplace.
+
+A business owner answered 4 questions:
+1. Business type: ${answers.q1}
+2. Biggest time drain: ${answers.q2}
+3. Number of employees: ${answers.q3}
+4. Monthly budget: ${answers.q4}
+
+Here are the available products on Shiftable:
+${productList}
+
+Based on their answers, recommend exactly 3 PERFECT FIT products and 2 SEMI FIT products from the list above.
+
+Return ONLY valid JSON in this exact format, no markdown, no explanation:
+{
+  "perfect": [
+    {"id": "product-id-here", "reason": "One sentence why this is perfect for them"},
+    {"id": "product-id-here", "reason": "One sentence why this is perfect for them"},
+    {"id": "product-id-here", "reason": "One sentence why this is perfect for them"}
+  ],
+  "semi": [
+    {"id": "product-id-here", "reason": "One sentence why this could also help"},
+    {"id": "product-id-here", "reason": "One sentence why this could also help"}
+  ]
+}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    const raw = data.content[0].text.trim().replace(/```json|```/g,'').trim();
+    const result = JSON.parse(raw);
+
+    // Save to localStorage
+    localStorage.setItem('shiftable_last_recs', JSON.stringify({ answers, result, timestamp: Date.now() }));
+
+    renderResults(result);
+  } catch(e) {
+    document.getElementById('afLoading').style.display = 'none';
+    document.getElementById('afQuestions').style.display = 'block';
+    document.getElementById('afSteps').style.display = 'flex';
+    alert('Something went wrong. Please try again.');
+  }
+}
+
+function renderResults(result) {
+  document.getElementById('afLoading').style.display = 'none';
+  const grid = document.getElementById('afResultsGrid');
+
+  const renderCard = (item, type) => {
+    const p = allProducts.find(x => x.id === item.id);
+    if (!p) return '';
+    const dest = p.affiliate_link || p.product_website || `product.html?id=${p.id}`;
+    return `
+    <div class="af-rec-card">
+      <span class="af-rec-badge ${type}">${type === 'perfect' ? '⭐ Perfect Fit' : '✓ Semi Fit'}</span>
+      <div class="af-rec-name">${p.name}</div>
+      <div class="af-rec-reason">${item.reason}</div>
+      <div class="af-rec-price">${p.price ? '$'+p.price+'/'+p.price_type : 'See pricing on site'}</div>
+      <a href="${dest}" target="_blank" rel="noopener" class="af-rec-btn">Visit Site →</a>
+    </div>`;
+  };
+
+  grid.innerHTML = result.perfect.map(i => renderCard(i,'perfect')).join('') + result.semi.map(i => renderCard(i,'semi')).join('');
+  document.getElementById('afResults').style.display = 'block';
+}
+
+function restartFinder() {
+  Object.keys(answers).forEach(k => delete answers[k]);
+  document.getElementById('afResults').style.display = 'none';
+  document.getElementById('afQuestions').style.display = 'block';
+  document.getElementById('afSteps').style.display = 'flex';
+  document.querySelectorAll('.af-q').forEach(q => q.classList.remove('active'));
+  document.querySelectorAll('.af-opt').forEach(o => o.classList.remove('selected'));
+  document.querySelectorAll('.af-next').forEach(b => b.disabled = true);
+  document.querySelectorAll('.af-step').forEach((s,i) => { s.classList.remove('active','done'); if(i===0) s.classList.add('active'); });
+  document.getElementById('q1').classList.add('active');
+}
+
+function loadPastConversation() {
+  const saved = localStorage.getItem('shiftable_last_recs');
+  if (!saved) return;
+  const { result } = JSON.parse(saved);
+  document.getElementById('afQuestions').style.display = 'none';
+  document.getElementById('afSteps').style.display = 'none';
+  renderResults(result);
+}
+
+// Check for past conversation on load
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('shiftable_last_recs');
+  if (saved) document.getElementById('afPast').style.display = 'block';
+});
+
+// PARTICLE CANVAS
+(function(){
+  const canvas = document.getElementById('heroCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+  const COUNT = 55;
+  function resize(){ W = canvas.width = canvas.offsetWidth; H = canvas.height = canvas.offsetHeight; }
+  function rand(a,b){ return a + Math.random()*(b-a); }
+  function initParticles(){
+    particles = [];
+    for(let i=0;i<COUNT;i++){
+      particles.push({ x:rand(0,W), y:rand(0,H), vx:rand(-0.18,0.18), vy:rand(-0.28,-0.06), r:rand(1.2,2.8), alpha:rand(0.15,0.55), color:Math.random()>.5?'56,189,248':'148,226,255' });
+    }
+  }
+  function drawConnections(){
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<110){ ctx.beginPath(); ctx.strokeStyle=`rgba(56,189,248,${(1-dist/110)*.12})`; ctx.lineWidth=.5; ctx.moveTo(particles[i].x,particles[i].y); ctx.lineTo(particles[j].x,particles[j].y); ctx.stroke(); }
+      }
+    }
+  }
+  function animate(){
+    ctx.clearRect(0,0,W,H); drawConnections();
+    particles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; if(p.y<-10){p.y=H+10;p.x=rand(0,W);} if(p.x<-10)p.x=W+10; if(p.x>W+10)p.x=-10; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=`rgba(${p.color},${p.alpha})`; ctx.fill(); });
+    requestAnimationFrame(animate);
+  }
+  resize(); initParticles(); animate();
+  window.addEventListener('resize',()=>{ resize(); initParticles(); });
+})();
+
+init();
+</script>
+</body>
+</html>
