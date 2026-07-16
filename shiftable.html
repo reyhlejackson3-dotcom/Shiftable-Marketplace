@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shiftable — AI competition prep for CTSO chapters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#062a63;
+    --navy-deep:#04203f;
+    --gold:#e0a92e;
+    --gold-bright:#f6c453;
+    --paper:#f6f5f1;
+    --ink:#15171c;
+    --muted:#5f6572;
+    --line:#e6e4dd;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Manrope",system-ui,sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:0 26px}
+  a{color:inherit}
+
+  /* Header */
+  .site-head{display:flex;align-items:center;justify-content:space-between;padding:26px 0}
+  .brand{font-family:"Sora",sans-serif;font-weight:800;font-size:23px;letter-spacing:-.03em;color:var(--navy)}
+  .brand i{color:var(--gold);font-style:normal}
+  .head-link{font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:600;color:var(--navy);text-decoration:none;padding:9px 16px;border:1px solid var(--line);border-radius:999px;transition:.18s}
+  .head-link:hover{border-color:var(--gold);background:#fff}
+
+  /* Hero panel */
+  .hero{
+    position:relative;overflow:hidden;
+    background:linear-gradient(150deg,var(--navy) 0%,var(--navy-deep) 100%);
+    border-radius:26px;padding:64px 56px 60px;margin-top:8px;
+    box-shadow:0 30px 60px -34px rgba(6,42,99,.55);
+  }
+  .hero::before{
+    content:"";position:absolute;top:-40%;right:-10%;width:520px;height:520px;
+    background:radial-gradient(circle,rgba(246,196,83,.20) 0%,rgba(246,196,83,0) 62%);
+    pointer-events:none;
+  }
+  .hero-eyebrow{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-bright)}
+  .hero h1{
+    font-family:"Sora",sans-serif;font-weight:800;
+    font-size:clamp(40px,6.4vw,68px);line-height:1.02;letter-spacing:-.035em;
+    color:#fff;margin:20px 0 22px;max-width:13ch;
+  }
+  .hero h1 em{font-style:normal;color:var(--gold-bright)}
+  .hero p{font-size:clamp(16px,2vw,18.5px);color:rgba(255,255,255,.72);max-width:50ch;line-height:1.6}
+  .hero p b{color:#fff;font-weight:600}
+  .hero-cta{
+    display:inline-flex;align-items:center;gap:9px;margin-top:32px;
+    font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:600;letter-spacing:.01em;
+    color:var(--navy);background:var(--gold-bright);text-decoration:none;
+    padding:14px 24px;border-radius:12px;transition:transform .14s,box-shadow .2s;
+  }
+  .hero-cta:hover{transform:translateY(-2px);box-shadow:0 14px 26px -12px rgba(246,196,83,.6)}
+  .hero-cta:focus-visible{outline:2px solid #fff;outline-offset:3px}
+
+  /* Roster */
+  .roster{margin-top:64px}
+  .section-label{display:flex;align-items:baseline;gap:14px;border-top:1px solid var(--line);padding-top:22px;margin-bottom:22px}
+  .section-label .n{font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:600;color:var(--gold)}
+  .section-label h2{font-family:"Sora",sans-serif;font-weight:700;font-size:15px;letter-spacing:.01em;color:var(--navy)}
+
+  .entry{display:grid;grid-template-columns:92px 1fr auto;gap:24px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 28px;text-decoration:none;transition:transform .2s,box-shadow .2s,border-color .2s}
+  .entry + .entry{margin-top:14px}
+  .entry.live:hover{transform:translateY(-3px);box-shadow:0 18px 38px -20px rgba(6,42,99,.34);border-color:#d5cfbf}
+  .entry.live:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+  .code{font-family:"JetBrains Mono",monospace;font-weight:600;font-size:15px;letter-spacing:.04em;color:var(--gold-bright);background:var(--navy);border-radius:11px;text-align:center;padding:14px 0}
+  .entry-body h3{font-family:"Sora",sans-serif;font-weight:700;font-size:22px;letter-spacing:-.02em;margin-bottom:5px;color:var(--ink)}
+  .entry-body p{font-size:14.5px;color:var(--muted);max-width:46ch}
+  .entry-side{display:flex;flex-direction:column;align-items:flex-end;gap:13px;white-space:nowrap}
+  .status{font-family:"JetBrains Mono",monospace;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:inline-flex;align-items:center;gap:7px}
+  .status.on{color:#c98a12}
+  .status.soon{color:var(--muted)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--gold);position:relative}
+  .dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1px solid var(--gold);opacity:.55;animation:pulse 2s ease-out infinite}
+  @keyframes pulse{0%{transform:scale(.6);opacity:.6}100%{transform:scale(1.7);opacity:0}}
+  .open{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:600;color:var(--navy)}
+  .entry.live:hover .open{color:var(--gold)}
+
+  .entry.soon{opacity:.72}
+  .entry.soon .code{color:var(--muted);background:#eef0f3}
+
+  /* Get help */
+  .help{margin-top:70px;border-top:1px solid var(--line);padding-top:46px;padding-bottom:82px}
+  .help h2{font-family:"Sora",sans-serif;font-weight:800;font-size:clamp(27px,4vw,36px);letter-spacing:-.03em;color:var(--navy);margin-bottom:10px}
+  .help > p{color:var(--muted);max-width:46ch;margin-bottom:28px}
+  form{display:grid;gap:15px;max-width:470px}
+  label{font-family:"JetBrains Mono",monospace;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:-7px}
+  input,textarea{font-family:"Manrope",sans-serif;font-size:15px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;width:100%;transition:border-color .16s,box-shadow .16s}
+  input:focus,textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(6,42,99,.08)}
+  textarea{resize:vertical;min-height:118px}
+  .send{font-family:"JetBrains Mono",monospace;font-weight:600;font-size:14px;color:var(--navy);background:var(--gold-bright);border:none;border-radius:12px;padding:15px 26px;cursor:pointer;justify-self:start;transition:transform .12s,box-shadow .2s}
+  .send:hover{transform:translateY(-2px);box-shadow:0 14px 26px -14px rgba(246,196,83,.7)}
+  .send:active{transform:translateY(0)}
+  .send:focus-visible{outline:2px solid var(--navy);outline-offset:3px}
+
+  footer{border-top:1px solid var(--line);padding:26px 0 42px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  footer span{font-family:"JetBrains Mono",monospace;font-size:12.5px;color:var(--muted)}
+
+  @media (max-width:640px){
+    .hero{padding:48px 30px 46px}
+    .entry{grid-template-columns:66px 1fr;gap:18px}
+    .entry-side{grid-column:1 / -1;flex-direction:row;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:15px}
+    .code{padding:11px 0;font-size:13px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="site-head">
+      <div class="brand">Shift<i>able</i></div>
+      <a class="head-link" href="#help">Get help</a>
+    </header>
+
+    <section class="hero">
+      <div class="hero-eyebrow">AI competition prep · CTSO chapters</div>
+      <h1>Prep like you've <em>already placed.</em></h1>
+      <p>Shiftable builds AI prep tools for Career &amp; Technical Student Organizations — <b>timed roleplays, judge-style feedback, and event-specific practice</b> for the competitions your chapter actually enters.</p>
+      <a class="hero-cta" href="https://decagpt.com" target="_blank" rel="noopener">Open DECA GPT →</a>
+    </section>
+
+    <section class="roster" aria-label="Products">
+      <div class="section-label">
+        <span class="n">01</span>
+        <h2>The lineup</h2>
+      </div>
+
+      <a class="entry live" href="https://decagpt.com" target="_blank" rel="noopener">
+        <div class="code">DECA</div>
+        <div class="entry-body">
+          <h3>DECA GPT</h3>
+          <p>Roleplay practice, instant judge-style feedback, and written-event prep for DECA competitors.</p>
+        </div>
+        <div class="entry-side">
+          <span class="status on"><span class="dot"></span>Live</span>
+          <span class="open">Open →</span>
+        </div>
+      </a>
+
+      <div class="entry soon">
+        <div class="code">FBLA</div>
+        <div class="entry-body">
+          <h3>FBLA GPT</h3>
+          <p>The same engine, built for FBLA events.</p>
+        </div>
+        <div class="entry-side">
+          <span class="status soon">In development</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="help" id="help">
+      <h2>Get help</h2>
+      <p>Questions about pricing, rolling Shiftable out to your chapter, or bringing it to another CTSO? Send it over.</p>
+      <form action="https://formspree.io/f/mojblyqg" method="POST">
+        <label for="email">Your email</label>
+        <input id="email" type="email" name="email" placeholder="you@school.edu" required>
+        <label for="message">Message</label>
+        <textarea id="message" name="message" placeholder="Tell us what you need…" required></textarea>
+        <button class="send" type="submit">Send message</button>
+      </form>
+    </section>
+
+    <footer>
+      <div class="brand">Shift<i>able</i></div>
+      <span>Shiftable LLC · Parker, CO</span>
+    </footer>
+  </div>
+</body>
+</html>
