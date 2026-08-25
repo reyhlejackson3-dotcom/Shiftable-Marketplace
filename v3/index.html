@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Program Builder — Elite Baseball &amp; Softball Systems</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cpath d=%27M16 3 29 16 16 29 3 16Z%27 fill=%27%23C0342B%27/%3E%3C/svg%3E">
+<meta name="description" content="Coach Alan DiGiosio builds unified baseball and softball programs — one language from 9U to varsity.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --grass:#16341F;
+  --grass-2:#1D4529;
+  --grass-3:#0D2415;
+  --chalk:#F3F6F0;
+  --chalk-dim:#AFC2B2;
+  --red:#C0342B;
+  --red-dk:#8A231C;
+  --clay:#8A5735;
+  --rail:300px;
+  --sp:clamp(1.1rem,3.6vw,2.4rem);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--grass);color:var(--chalk);
+  font-family:'Barlow',system-ui,sans-serif;font-size:17px;line-height:1.68;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+h1,h2,h3{font-family:'Oswald',sans-serif;font-weight:600;text-transform:uppercase;
+  line-height:1.02;letter-spacing:.005em}
+.cond{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.16em}
+
+/* ===== grass ===== */
+#turf{position:fixed;inset:0;z-index:0;background-repeat:repeat;background-size:340px 340px}
+#turf::after{content:"";position:absolute;inset:0;
+  background:
+    repeating-linear-gradient(96deg,rgba(255,255,255,.028) 0 78px,transparent 78px 156px),
+    radial-gradient(ellipse 130% 90% at 50% 30%,transparent 40%,rgba(6,18,10,.62) 100%)}
+
+/* ===== layout ===== */
+header{position:fixed;top:0;left:0;right:0;z-index:60;
+  background:linear-gradient(180deg,rgba(9,26,15,.92),rgba(9,26,15,0));transition:background .35s}
+header.solid{background:var(--grass-3);box-shadow:0 8px 26px -18px #000}
+header .in{max-width:1240px;margin:0 auto;padding:0 var(--sp);height:66px;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.brand{text-decoration:none;font-family:'Oswald',sans-serif;font-weight:700;text-transform:uppercase;
+  font-size:1.06rem;letter-spacing:.05em;color:#fff;line-height:1;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+.brand span{color:var(--red);transition:color .25s}
+.brand:hover span{color:#fff}
+#topnav{display:flex;gap:1.5rem}
+#topnav a{text-decoration:none;font-family:'Oswald',sans-serif;font-size:.8rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--chalk-dim);padding-bottom:4px;
+  border-bottom:2px solid transparent;text-shadow:0 2px 10px rgba(0,0,0,.8);
+  transition:color .22s,border-color .22s,transform .22s cubic-bezier(.2,.8,.3,1)}
+#topnav a:hover,#topnav a.on{color:#fff;border-color:var(--red);transform:translateY(-2px)}
+@media(max-width:860px){#topnav{display:none}}
+
+/* ===== the chalk line ===== */
+#content{position:relative;max-width:1180px;margin:0 auto;
+  padding-left:clamp(3.2rem,6vw,6rem);padding-right:var(--sp)}
+@media(max-width:960px){#content{padding-left:clamp(2rem,7vw,3rem)}}
+#chalkSvg{position:absolute;left:0;top:0;width:70px;height:100%;overflow:visible;
+  pointer-events:none;z-index:1}
+@media(max-width:960px){#chalkSvg{left:-6px;width:40px}}
+#chalkLine{fill:none;stroke:#F7FAF6;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;
+  opacity:.92;filter:url(#chalkyness)}
+#chalkSoft{fill:none;stroke:#F7FAF6;stroke-width:17;stroke-linecap:round;opacity:.13;
+  filter:url(#chalkyness)}
+.tick{fill:none;stroke:#F7FAF6;stroke-width:6;stroke-linecap:round;opacity:0;filter:url(#chalkyness);
+  transition:opacity .5s ease}
+.tick.on{opacity:.85}
+
+/* ===== sections ===== */
+.sec{padding:clamp(3.4rem,7vw,5.6rem) 0;position:relative;z-index:2}
+.kick{font-family:'Oswald',sans-serif;font-size:.78rem;letter-spacing:.26em;text-transform:uppercase;
+  color:#E2564B;margin-bottom:.9rem;text-shadow:0 2px 10px rgba(0,0,0,.6)}
+h2{font-size:clamp(1.9rem,4vw,2.9rem)}
+h2 .r{color:var(--red)}
+.lede{margin-top:1rem;color:var(--chalk-dim);max-width:60ch}
+.rv{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.3,1)}
+.rv.in{opacity:1;transform:none}
+
+.btn{display:inline-flex;align-items:center;font-family:'Oswald',sans-serif;font-weight:600;
+  font-size:.86rem;letter-spacing:.15em;text-transform:uppercase;padding:.82rem 1.6rem;border:0;
+  cursor:pointer;text-decoration:none;background:var(--red);color:#fff;box-shadow:0 5px 0 0 var(--red-dk);
+  transition:transform .13s cubic-bezier(.2,.8,.3,1),box-shadow .13s}
+.btn:hover,.btn:focus-visible{transform:translateY(-3px);box-shadow:0 8px 0 0 var(--red-dk)}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 0 var(--red-dk)}
+.btn.chalk{background:transparent;color:#fff;box-shadow:none;
+  border:2px solid rgba(243,246,240,.5)}
+.btn.chalk:hover{border-color:#fff;box-shadow:none}
+
+/* ===== hero: the photo is a backdrop, not a picture ===== */
+#hero{position:relative;z-index:2;min-height:100vh;min-height:100svh;
+  display:flex;flex-direction:column;justify-content:center;padding:6rem 0 0;overflow:hidden}
+#heroBg{position:absolute;inset:0;background-size:cover;background-position:center 70%}
+/* graded hard into the grass so it reads as ground, not a photograph */
+#heroBg::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(13,36,21,.72),rgba(13,36,21,.5) 42%,rgba(13,36,21,.94)),
+             radial-gradient(ellipse 110% 80% at 50% 40%,rgba(22,52,31,.2),rgba(13,36,21,.85))}
+#heroBg::before{content:"";position:absolute;inset:0;z-index:1;
+  background:rgba(22,52,31,.5);mix-blend-mode:color}
+.heroin{position:relative;z-index:3;max-width:1180px;margin:0 auto;width:100%;
+  padding:0 var(--sp) 0 clamp(3.2rem,6vw,6rem);flex:1;display:flex;flex-direction:column;justify-content:center}
+@media(max-width:960px){.heroin{padding-left:clamp(2rem,7vw,3rem)}}
+#hero h1{font-size:clamp(2.6rem,6.4vw,5rem);max-width:15ch}
+#hero h1 em{font-style:normal;color:var(--red);display:block}
+#hero .lede{font-size:1.06rem;max-width:52ch}
+.cta{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.9rem}
+/* scoreboard sits on the bottom edge of the backdrop */
+.scorebar{position:relative;z-index:3;max-width:1180px;margin:0 auto;width:100%;
+  padding:0 var(--sp) 0 clamp(3.2rem,6vw,6rem);margin-bottom:clamp(1.6rem,4vh,3rem)}
+@media(max-width:960px){.scorebar{padding-left:clamp(2rem,7vw,3rem)}}
+.scorebar .in{display:grid;grid-template-columns:repeat(4,1fr);
+  border:2px solid rgba(243,246,240,.34);background:rgba(13,36,21,.5);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+@media(max-width:640px){.scorebar .in{grid-template-columns:repeat(2,1fr)}}
+.sb{padding:1.15rem .8rem;text-align:center;border-right:2px solid rgba(243,246,240,.34);
+  transition:background .25s,transform .26s cubic-bezier(.2,.8,.3,1)}
+.sb:last-child{border-right:0}
+@media(max-width:640px){.sb:nth-child(2){border-right:0}.sb:nth-child(-n+2){border-bottom:2px solid rgba(243,246,240,.34)}}
+.sb:hover{background:rgba(192,52,43,.24);transform:translateY(-4px)}
+.sb b{display:block;font-family:'Oswald',sans-serif;font-weight:700;font-size:2.1rem;line-height:1}
+.sb span{font-size:.63rem;letter-spacing:.16em;text-transform:uppercase;color:var(--chalk-dim);
+  display:block;margin-top:.4rem;line-height:1.45;font-weight:600}
+
+/* ===== level cards, chalk-drawn ===== */
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem;margin-top:2rem}
+@media(max-width:700px){.levels{grid-template-columns:repeat(2,1fr)}}
+.lev{border:2px solid rgba(243,246,240,.34);padding:1.1rem .7rem;text-align:center;
+  background:rgba(13,36,21,.34);
+  transition:transform .28s cubic-bezier(.2,.8,.3,1),background .25s,border-color .25s}
+.lev:hover{transform:translateY(-9px) rotate(-1.2deg);border-color:var(--red);background:rgba(192,52,43,.2)}
+.lev b{display:block;font-family:'Oswald',sans-serif;font-weight:700;font-size:1.5rem}
+.lev span{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk-dim);
+  display:block;margin-top:.3rem;font-weight:600}
+
+/* ===== photo strip ===== */
+.strip{position:relative;height:clamp(240px,34vw,400px);overflow:hidden;margin-top:2.4rem;
+  border:1px solid rgba(243,246,240,.2)}
+.strip .ph{position:absolute;inset:0;background-size:cover;
+  transition:transform 1.2s cubic-bezier(.2,.8,.3,1)}
+.strip:hover .ph{transform:scale(1.045)}
+.strip .cap{position:absolute;left:0;bottom:0;z-index:2;background:var(--red);color:#fff;
+  font-family:'Oswald',sans-serif;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;
+  padding:.7rem 1.2rem}
+
+/* ===== system: two-column grid of levels ===== */
+.grid6{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-top:2rem}
+@media(max-width:760px){.grid6{grid-template-columns:1fr}}
+.cell{border-left:3px solid var(--red);background:rgba(13,36,21,.42);padding:1rem 1.1rem;
+  transition:transform .28s cubic-bezier(.2,.8,.3,1),background .25s,border-color .25s}
+.cell:hover{transform:translateX(9px);background:rgba(192,52,43,.18);border-color:#fff}
+.cell .lv{font-family:'Oswald',sans-serif;font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--red);transition:color .25s}
+.cell:hover .lv{color:#fff}
+.cell .tx{display:block;margin-top:.35rem;color:var(--chalk-dim);font-size:.96rem;transition:color .25s}
+.cell:hover .tx{color:#fff}
+
+/* ===== quote ===== */
+.quote{padding:clamp(3rem,7vw,5rem) 0;position:relative;z-index:2}
+.quote blockquote{font-family:'Oswald',sans-serif;font-weight:500;text-transform:uppercase;
+  font-size:clamp(1.5rem,3.4vw,2.5rem);line-height:1.12;max-width:22ch;
+  padding-bottom:1.1rem;border-bottom:4px solid rgba(243,246,240,.42)}
+.quote blockquote .r{color:var(--red);display:block}
+.quote cite{display:block;margin-top:1rem;font-style:normal;font-size:.7rem;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--chalk-dim);font-weight:600}
+
+/* ===== coach ===== */
+.coachrow{display:grid;grid-template-columns:1fr 260px;gap:clamp(1.6rem,4vw,3rem);align-items:start}
+@media(max-width:820px){.coachrow{grid-template-columns:1fr}}
+.head{position:relative;aspect-ratio:1;overflow:hidden;border:2px solid rgba(243,246,240,.34);
+  transition:transform .38s cubic-bezier(.2,.8,.3,1),border-color .3s}
+.head:hover{transform:translateY(-8px);border-color:var(--red)}
+.head img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s cubic-bezier(.2,.8,.3,1)}
+.head:hover img{transform:scale(1.07)}
+.coachrow p{margin-top:1rem;color:var(--chalk-dim)}
+.coachrow p strong{color:#fff;font-weight:600}
+
+/* ===== packages: scorecard rows ===== */
+.cards{margin-top:2.2rem;display:flex;flex-direction:column;gap:1rem}
+.card{border:2px solid rgba(243,246,240,.26);background:rgba(13,36,21,.4);
+  display:grid;grid-template-columns:1fr 1.25fr 200px;gap:1.4rem;padding:1.5rem;
+  transition:transform .3s cubic-bezier(.2,.8,.3,1),border-color .3s,background .25s}
+.card:hover{transform:translateY(-7px);border-color:var(--red);background:rgba(13,36,21,.62)}
+@media(max-width:940px){.card{grid-template-columns:1fr;gap:.9rem}}
+.card .n{font-family:'Oswald',sans-serif;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--red)}
+.card h3{font-size:1.35rem;margin-top:.5rem}
+.card .who{font-size:.7rem;letter-spacing:.13em;text-transform:uppercase;color:var(--chalk-dim);
+  margin-top:.5rem;font-weight:600}
+.card .desc{color:var(--chalk-dim);font-size:.95rem}
+.card ul{list-style:none;margin-top:.9rem}
+.card li{display:grid;grid-template-columns:12px 1fr;gap:.6rem;padding:.36rem 0;font-size:.9rem;
+  color:var(--chalk-dim);transition:transform .22s cubic-bezier(.2,.8,.3,1),color .22s}
+.card li:hover{transform:translateX(7px);color:#fff}
+.card li::before{content:"";width:7px;height:7px;margin-top:.55rem;background:var(--red);
+  clip-path:polygon(0 0,100% 50%,0 100%)}
+.card .cad{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--chalk-dim);
+  display:block;margin-bottom:.8rem;font-weight:600}
+.card .btn{width:100%;justify-content:center}
+
+/* ===== booking ===== */
+.calbox{border:2px dashed rgba(243,246,240,.34);padding:clamp(1.3rem,3.2vw,2rem);margin-top:1.9rem;
+  transition:border-color .3s}
+.calbox:hover{border-color:var(--red)}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem}
+@media(max-width:700px){.types{grid-template-columns:1fr}}
+.type{background:rgba(13,36,21,.7);border:1px solid rgba(243,246,240,.24);padding:1rem;text-align:left;
+  color:#fff;font-family:inherit;cursor:pointer;
+  transition:transform .26s cubic-bezier(.2,.8,.3,1),background .25s,border-color .25s}
+.type:hover{transform:translateY(-7px);background:var(--red);border-color:var(--red)}
+.type b{display:block;font-family:'Oswald',sans-serif;font-weight:600;font-size:1rem;text-transform:uppercase}
+.type span{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk-dim);
+  display:block;margin-top:.25rem;font-weight:600}
+.type:hover span{color:rgba(255,255,255,.85)}
+.note{font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:#E79A90;margin-top:1rem;
+  font-weight:600}
+
+/* ===== form ===== */
+.form{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:2rem;max-width:820px}
+@media(max-width:760px){.form{grid-template-columns:1fr}}
+.fw{display:flex;flex-direction:column;gap:.4rem}
+.fw.full{grid-column:1/-1}
+label{font-family:'Oswald',sans-serif;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--chalk-dim);transition:color .2s}
+.fw:hover label,.fw:focus-within label{color:var(--red)}
+input,select,textarea{font-family:inherit;font-size:1rem;color:#fff;background:rgba(13,36,21,.62);
+  border:1px solid rgba(243,246,240,.26);padding:.8rem .9rem;
+  transition:border-color .2s,background .2s,transform .2s cubic-bezier(.2,.8,.3,1)}
+input:hover,select:hover,textarea:hover{border-color:rgba(243,246,240,.55)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--red);
+  background:rgba(13,36,21,.85);transform:translateY(-2px)}
+select option{background:#16341F;color:#fff}
+textarea{resize:vertical;min-height:118px}
+.msg{grid-column:1/-1;font-family:'Oswald',sans-serif;letter-spacing:.1em;text-transform:uppercase;
+  font-size:.8rem;padding:.85rem 1rem;display:none;border-left:4px solid}
+.msg.ok{display:block;color:#8FE0B0;border-color:#3E9A6A;background:rgba(62,154,106,.16)}
+.msg.err{display:block;color:#F0A79C;border-color:var(--red);background:rgba(192,52,43,.16)}
+.form .btn{grid-column:1/-1;justify-self:start}
+
+footer{position:relative;z-index:2;border-top:1px solid rgba(243,246,240,.16);
+  padding:2.2rem 0;margin-top:2rem}
+footer .in{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+  font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--chalk-dim);font-weight:600}
+footer b{color:#fff}
+footer .in>div{transition:color .25s,transform .25s}
+footer .in>div:hover{color:#fff;transform:translateY(-3px)}
+:focus-visible{outline:3px solid var(--red);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important}
+  .rv{opacity:1;transform:none} html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<div id="turf" aria-hidden="true"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="chalkyness">
+    <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="4.5" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<header id="hdr">
+  <div class="in">
+    <a class="brand" href="#hero">The Program <span>Builder</span></a>
+    <nav id="topnav">
+      <a href="#gap">The gap</a>
+      <a href="#system">The system</a>
+      <a href="#coach">The coach</a>
+      <a href="#packages">Packages</a>
+      <a href="#book">Book</a>
+    </nav>
+  </div>
+</header>
+
+<section id="hero">
+  <div id="heroBg"></div>
+  <div class="heroin">
+    <div class="kick">Elite baseball &amp; softball systems</div>
+    <h1>Build the program.<em>Not just the team.</em></h1>
+    <p class="lede">Coach Alan DiGiosio designs the system a whole organization runs on — one language, one set of coverages, one standard, from 9U all the way to varsity.</p>
+    <div class="cta">
+      <a class="btn" href="#book">Book a consult</a>
+      <a class="btn chalk" href="#packages">See the packages</a>
+    </div>
+  </div>
+  <div class="scorebar">
+    <div class="in">
+      <div class="sb"><b>33</b><span>Years on<br>the diamond</span></div>
+      <div class="sb"><b>16</b><span>Head coach<br>baseball</span></div>
+      <div class="sb"><b>12</b><span>Head coach<br>softball</span></div>
+      <div class="sb"><b>2</b><span>Sports,<br>one system</span></div>
+    </div>
+  </div>
+</section>
+
+<main id="content">
+  <svg id="chalkSvg" aria-hidden="true"><path id="chalkSoft"/><path id="chalkLine"/><g id="ticks"></g></svg>
+
+    <!-- THE GAP -->
+    <section class="sec" id="gap">
+      <div class="rv">
+        <div class="kick">The gap</div>
+        <h2>Same logo.<br><span class="r">Seven different games.</span></h2>
+        <p class="lede">A 10U coach teaches one bunt coverage. The 14U coach teaches another. By the time a player reaches varsity they've learned four systems and mastered none — and the head coach spends the first three weeks of every season un-teaching.</p>
+      </div>
+      <div class="levels rv">
+        <div class="lev"><b>10U</b><span>System A</span></div>
+        <div class="lev"><b>12U</b><span>System B</span></div>
+        <div class="lev"><b>14U</b><span>System C</span></div>
+        <div class="lev"><b>Varsity</b><span>Start over</span></div>
+      </div>
+      <div class="strip rv"><div class="ph" id="stripLineup"></div><span class="cap">One roster, one standard</span></div>
+    </section>
+
+    <!-- THE SYSTEM -->
+    <section class="sec" id="system">
+      <div class="rv">
+        <div class="kick">Vertical integration</div>
+        <h2>One system,<br><span class="r">bottom to top.</span></h2>
+        <p class="lede">Every level runs the same signs, the same coverages, the same approach. A player moving up isn't learning a new game — they're getting more of the one they already know.</p>
+      </div>
+      <div class="grid6 rv">
+        <div class="cell"><span class="lv">9U–10U</span><span class="tx">Introduce the vocabulary — signs, base paths, the standard</span></div>
+        <div class="cell"><span class="lv">11U–12U</span><span class="tx">Add coverages: bunt defense, first-and-third, cutoffs</span></div>
+        <div class="cell"><span class="lv">13U–14U</span><span class="tx">Situational reps at game speed, same calls as varsity</span></div>
+        <div class="cell"><span class="lv">Freshman</span><span class="tx">Nothing new to install — practice time goes to execution</span></div>
+        <div class="cell"><span class="lv">JV</span><span class="tx">Roles and depth built against the varsity standard</span></div>
+        <div class="cell"><span class="lv">Varsity</span><span class="tx">Week one is competition, not installation</span></div>
+      </div>
+    </section>
+
+    <!-- QUOTE -->
+    <div class="quote">
+      <blockquote class="rv">He doesn't fix swings.<span class="r">He builds the structure the swing gets taught inside.</span></blockquote>
+      <cite class="rv">What a program is actually for</cite>
+    </div>
+
+    <!-- COACH -->
+    <section class="sec" id="coach">
+      <div class="coachrow">
+        <div class="rv">
+          <div class="kick">The architect</div>
+          <h2>Coach Alan<br><span class="r">DiGiosio</span></h2>
+          <p>Thirty-three years on the diamond, twenty-eight of them as a head coach — <strong>sixteen years running high school baseball, twelve running high school softball.</strong> Both sports. Both diamonds. Both cultures.</p>
+          <p>He has managed every part of a program that isn't the game itself: developing assistant coaches, building booster clubs, running facilities, handling the parent who won't let it go. That work decides whether a program holds together, and nobody teaches it.</p>
+        </div>
+        <div class="head rv"><img id="picCoach" alt="Coach Alan DiGiosio"></div>
+      </div>
+    </section>
+
+    <!-- PACKAGES -->
+    <section class="sec" id="packages">
+      <div class="rv">
+        <div class="kick">Service packages</div>
+        <h2>Three ways<br><span class="r">to bring him in.</span></h2>
+        <p class="lede">Every engagement is scoped to your organization. Pricing is quoted after a short call — tell him the size of the program and what's breaking.</p>
+      </div>
+      <div class="cards">
+        <article class="card rv">
+          <div><div class="n">Package 01</div><h3>The Coaching<br>Blueprint Clinic</h3>
+            <div class="who">League &amp; club directors · HS head coaches</div></div>
+          <div><p class="desc">A single session for your whole coaching staff, built around the thing every coach is short on: practice time.</p>
+            <ul><li>A practice plan that uses every minute</li><li>Station design for the coaches you actually have</li>
+            <li>Running multiple age groups on one field</li><li>What to cut when weather takes a day</li>
+            <li>Plan templates your staff keeps and reuses</li></ul></div>
+          <div><span class="cad">One-time event</span><a class="btn" href="#contact" data-pkg="Coaching Blueprint Clinic">Request pricing</a></div>
+        </article>
+        <article class="card rv">
+          <div><div class="n">Package 02</div><h3>Program-<br>in-a-Box</h3>
+            <div class="who">Travel orgs · Rec leagues · HS programs</div></div>
+          <div><p class="desc">A full system design for the organization — the universal language every team from 9U to varsity will run.</p>
+            <ul><li>One signs system across every level</li><li>Standardized bunt coverages and cutoffs</li>
+            <li>A shared hitting approach and terminology</li><li>Efficiency audits — he attends live practices</li>
+            <li>Written documentation your staff hands down</li></ul></div>
+          <div><span class="cad">One-time engagement</span><a class="btn" href="#contact" data-pkg="Program-in-a-Box">Request pricing</a></div>
+        </article>
+        <article class="card rv">
+          <div><div class="n">Package 03</div><h3>Coach<br>Mentorship</h3>
+            <div class="who">Head coaches · Program directors</div></div>
+          <div><p class="desc">Ongoing one-on-one work on the part of the job that has nothing to do with the game.</p>
+            <ul><li>Conflict resolution — the difficult parent</li><li>Booster club building and fundraising</li>
+            <li>Staff development: teaching coaches to teach</li><li>Facility and equipment planning</li>
+            <li>Someone to call before you send the email</li></ul></div>
+          <div><span class="cad">Ongoing · monthly</span><a class="btn" href="#contact" data-pkg="Coach Mentorship">Request pricing</a></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- BOOK -->
+    <section class="sec" id="book">
+      <div class="strip rv" style="margin-top:0;margin-bottom:2.2rem">
+        <div class="ph" id="stripCeleb"></div><span class="cap">What it looks like when it works</span>
+      </div>
+      <div class="rv">
+        <div class="kick">Scheduling</div>
+        <h2>Twenty minutes,<br><span class="r">no cost.</span></h2>
+        <p class="lede">Bring the shape of your program — number of teams, age range, and the problem you keep running into.</p>
+        <div id="cal-mount">
+          <div class="calbox">
+            <div class="types">
+              <button class="type"><b>Clinic</b><span>20 min · video</span></button>
+              <button class="type"><b>Program</b><span>30 min · video</span></button>
+              <button class="type"><b>Mentorship</b><span>20 min · phone</span></button>
+            </div>
+            <p class="note">Demo state — set CAL_USER in the script to go live</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="sec" id="contact">
+      <div class="rv">
+        <div class="kick">Contact</div>
+        <h2>Tell him about<br><span class="r">your program.</span></h2>
+      </div>
+      <form class="form rv" id="cf" novalidate>
+        <div class="fw"><label for="name">Your name</label><input id="name" name="name" type="text" autocomplete="name"></div>
+        <div class="fw"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email"></div>
+        <div class="fw"><label for="org">Organization</label><input id="org" name="organization" type="text"></div>
+        <div class="fw"><label for="role">Your role</label><select id="role" name="role">
+          <option>League or club director</option><option>High school head coach</option><option>Assistant coach</option>
+          <option>Board member</option><option>Parent</option><option>Other</option></select></div>
+        <div class="fw"><label for="pkg">Interested in</label><select id="pkg" name="package">
+          <option>Coaching Blueprint Clinic</option><option>Program-in-a-Box</option>
+          <option>Coach Mentorship</option><option>Not sure yet</option></select></div>
+        <div class="fw"><label for="size">Program size</label><input id="size" name="program_size" type="text"></div>
+        <div class="fw full"><label for="m">What's breaking?</label><textarea id="m" name="message"></textarea></div>
+        <div class="msg" id="msg" role="status" aria-live="polite"></div>
+        <button class="btn" type="submit" id="sb">Send it over</button>
+      </form>
+    </section>
+
+    <footer>
+      <div class="in">
+        <div><b>The Program Builder</b> — Elite Baseball &amp; Softball Systems</div>
+        <div>Coach Alan DiGiosio</div>
+        <div>&copy; 2026</div>
+      </div>
+    </footer>
+
+</main>
+
+<script>
+/* ==========================================================
+   SWAP AT HANDOFF
+   ========================================================== */
+const FORMSPREE = "https://formspree.io/f/xgawqezn";
+const CAL_USER  = "";
+/* ========================================================== */
+
+const IMG={field:"../assets/field.webp",lineup:"../assets/lineup.webp",celeb:"../assets/celeb.webp",coach:"../assets/coach.webp"};
+document.getElementById('heroBg').style.backgroundImage=`url('${IMG.field}')`;
+const sl=document.getElementById('stripLineup');
+sl.style.backgroundImage=`url('${IMG.lineup}')`; sl.style.backgroundPosition='center 32%';
+const sc=document.getElementById('stripCeleb');
+sc.style.backgroundImage=`url('${IMG.celeb}')`; sc.style.backgroundPosition='center 40%';
+document.getElementById('picCoach').src=IMG.coach;
+
+/* ---------- grass ---------- */
+(function(){
+  const c=document.createElement('canvas'); c.width=c.height=340;
+  const x=c.getContext('2d');
+  x.fillStyle='#16341F'; x.fillRect(0,0,340,340);
+  /* blades */
+  for(let i=0;i<26000;i++){
+    const g=Math.random();
+    x.strokeStyle = g>.62 ? `rgba(58,110,66,${Math.random()*.5})`
+                 : g>.3  ? `rgba(14,42,22,${Math.random()*.5})`
+                         : `rgba(34,74,42,${Math.random()*.45})`;
+    x.lineWidth=Math.random()*1.3+.35;
+    const px=Math.random()*340, py=Math.random()*340;
+    const h=Math.random()*5+2, lean=(Math.random()-.5)*2.6;
+    x.beginPath(); x.moveTo(px,py); x.lineTo(px+lean,py-h); x.stroke();
+  }
+  /* clumping so it doesn't read as flat noise */
+  for(let i=0;i<420;i++){
+    const px=Math.random()*340, py=Math.random()*340, r=Math.random()*26+8;
+    const g=x.createRadialGradient(px,py,0,px,py,r);
+    g.addColorStop(0,`rgba(${Math.random()>.5?'44,88,50':'12,36,20'},.18)`);
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    x.fillStyle=g; x.beginPath(); x.arc(px,py,r,0,7); x.fill();
+  }
+  document.getElementById('turf').style.backgroundImage=`url('${c.toDataURL()}')`;
+})();
+
+/* ---------- the chalk line ---------- */
+const content=document.getElementById('content');
+const svg=document.getElementById('chalkSvg');
+const line=document.getElementById('chalkLine');
+const soft=document.getElementById('chalkSoft');
+const tickG=document.getElementById('ticks');
+let LEN=0;
+
+function buildChalk(){
+  const W=svg.clientWidth||70, H=content.offsetHeight;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('preserveAspectRatio','none');
+
+  /* a hand-drawn line wanders — perfectly straight reads as a border, not chalk */
+  const cx=W*0.5, pts=[];
+  for(let y=0;y<=H;y+=46){
+    pts.push([cx+Math.sin(y*0.011)*4.5+(Math.random()-.5)*1.8, y]);
+  }
+  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  line.setAttribute('d',d); soft.setAttribute('d',d);
+  LEN=line.getTotalLength();
+  [line,soft].forEach(el=>{el.style.strokeDasharray=LEN;});
+
+  /* a tick mark where each section starts */
+  tickG.innerHTML='';
+  document.querySelectorAll('#content .sec').forEach(sec=>{
+    const y=sec.offsetTop+34;
+    const t=document.createElementNS('http://www.w3.org/2000/svg','path');
+    t.setAttribute('d',`M ${cx-13} ${y} L ${cx+15} ${y-3}`);
+    t.setAttribute('class','tick');
+    t.dataset.y=y;
+    tickG.appendChild(t);
+  });
+  drawChalk();
+}
+
+function drawChalk(){
+  const H=content.offsetHeight;
+  const drawn=Math.min(Math.max((scrollY+innerHeight*0.72-content.offsetTop)/H,0),1);
+  const off=LEN*(1-drawn);
+  line.style.strokeDashoffset=off;
+  soft.style.strokeDashoffset=off;
+  const reached=drawn*H;
+  [...tickG.children].forEach(t=>t.classList.toggle('on',+t.dataset.y<=reached));
+
+  /* rail nav follows the section you're in */
+  let cur='';
+  document.querySelectorAll('#content .sec').forEach(sec=>{
+    if(sec.getBoundingClientRect().top <= innerHeight*0.42) cur=sec.id;
+  });
+  document.querySelectorAll('#topnav a').forEach(a=>
+    a.classList.toggle('on',a.getAttribute('href')==='#'+cur));
+  document.getElementById('hdr').classList.toggle('solid',scrollY>innerHeight*0.75);
+}
+
+let t=false;
+addEventListener('scroll',()=>{if(!t){requestAnimationFrame(()=>{drawChalk();t=false;});t=true;}},{passive:true});
+addEventListener('resize',buildChalk);
+addEventListener('load',buildChalk);
+buildChalk();
+setTimeout(buildChalk,700);
+
+/* ---------- reveals ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);setTimeout(buildChalk,760);}
+}),{threshold:.1,rootMargin:'0px 0px -60px 0px'});
+document.querySelectorAll('.rv').forEach((el,i)=>{el.style.transitionDelay=(i%3)*90+'ms';io.observe(el);});
+
+/* ---------- package button prefills the form ---------- */
+document.querySelectorAll('[data-pkg]').forEach(b=>b.addEventListener('click',()=>{
+  const s=document.getElementById('pkg'),v=b.dataset.pkg;
+  [...s.options].forEach(o=>{if(o.text===v)s.value=o.value;});
+}));
+
+/* ---------- cal.com ---------- */
+if(CAL_USER){
+  (function(C,A,L){let p=function(a,ar){a.q.push(ar)};let d=C.document;C.Cal=C.Cal||function(){let cal=C.Cal;let ar=arguments;if(!cal.loaded){cal.ns={};cal.q=cal.q||[];d.head.appendChild(d.createElement("script")).src=A;cal.loaded=true}if(ar[0]===L){const api=function(){p(api,arguments)};const namespace=ar[1];api.q=api.q||[];typeof namespace==="string"?(cal.ns[namespace]=api)&&p(api,ar):p(cal,ar);return}p(cal,ar)}})(window,"https://app.cal.com/embed/embed.js","init");
+  Cal("init",{origin:"https://cal.com"});
+  document.getElementById('cal-mount').innerHTML='<div id="cal-inline"></div>';
+  Cal("inline",{elementOrSelector:"#cal-inline",calLink:CAL_USER,layout:"month_view"});
+  Cal("ui",{theme:"dark",cssVarsPerTheme:{dark:{"cal-brand":"#C0342B"}}});
+}else{
+  document.querySelectorAll('.type').forEach(b=>b.addEventListener('click',()=>{
+    document.getElementById('contact').scrollIntoView({behavior:'smooth'});
+  }));
+}
+
+/* ---------- formspree ---------- */
+const cf=document.getElementById('cf'),msg=document.getElementById('msg'),sb=document.getElementById('sb');
+cf.addEventListener('submit',async e=>{
+  e.preventDefault(); msg.className='msg';
+  const n=cf.name.value.trim(),em=cf.email.value.trim();
+  if(!n||!em.includes('@')){msg.textContent='Add your name and a valid email so he can reply.';msg.className='msg err';return;}
+  sb.disabled=true; sb.textContent='Sending…';
+  try{
+    const r=await fetch(FORMSPREE,{method:'POST',
+      headers:{'Accept':'application/json','Content-Type':'application/json'},
+      body:JSON.stringify(Object.fromEntries(new FormData(cf)))});
+    if(!r.ok) throw 0;
+    cf.reset(); msg.textContent='Sent. Coach DiGiosio will get back to you within a day or two.'; msg.className='msg ok';
+  }catch(_){ msg.textContent='That did not go through. Email coach directly and he will pick it up.'; msg.className='msg err'; }
+  finally{ sb.disabled=false; sb.textContent='Send it over'; }
+});
+</script>
+
+<script>
+/* forward 1/2/3 to the switcher shell — ignored while typing in the form */
+addEventListener('keydown',function(e){
+  var t=(document.activeElement&&document.activeElement.tagName)||'';
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(t)) return;
+  if(e.key==='1'||e.key==='2'||e.key==='3'){
+    if(window.parent!==window) window.parent.postMessage({tpb:'switch',v:e.key},'*');
+  }
+});
+</script>
+</body>
+</html>
