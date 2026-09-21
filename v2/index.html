@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Program Builder — Elite Baseball &amp; Softball Systems</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cpath d=%27M16 3 29 16 16 29 3 16Z%27 fill=%27%23C0342B%27/%3E%3C/svg%3E">
+<meta name="description" content="Coach Alan DiGiosio builds unified baseball and softball programs — one language from 9U to varsity.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0F2140;
+  --navy-2:#0A1730;
+  --navy-3:#1B3563;
+  --red:#C8102E;
+  --red-dk:#8E0A20;
+  --white:#FCFBF8;
+  --pale:#E7EBF2;
+  --pale-2:#D3DAE6;
+  --ink:#0B1526;
+  --maxw:1160px;
+  --sp:clamp(1.15rem,4vw,2.2rem);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--white);color:var(--ink);
+  font-family:'Source Serif 4',Georgia,serif;font-size:17.5px;line-height:1.68;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+h1,h2,h3{font-family:'Archivo',system-ui,sans-serif;font-weight:900;text-transform:uppercase;
+  line-height:.94;letter-spacing:-.022em}
+.sans{font-family:'Archivo',system-ui,sans-serif}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--sp)}
+.kicker{font-family:'Archivo',sans-serif;font-weight:700;font-size:.73rem;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:.7rem;margin-bottom:1rem}
+.kicker::after{content:"";height:2px;flex:1;background:currentColor;opacity:.35;max-width:70px}
+.kicker.mid{justify-content:center}
+.kicker.mid::before{content:"";height:2px;flex:1;background:currentColor;opacity:.35;max-width:70px}
+
+/* ===== header ===== */
+header{position:fixed;top:0;left:0;right:0;z-index:60;transition:background .35s,box-shadow .35s;background:linear-gradient(180deg,rgba(10,23,48,.72),rgba(10,23,48,0))}
+header.solid{background:var(--navy);box-shadow:0 8px 26px -18px #000}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:66px;gap:1rem}
+.brand{display:flex;align-items:baseline;gap:.4rem;text-decoration:none;color:#fff;
+  font-family:'Archivo',sans-serif;font-weight:900;text-transform:uppercase;letter-spacing:.04em;
+  font-size:1.02rem;line-height:1;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+.brand span{color:var(--red);transition:color .25s}
+.brand:hover span{color:#fff}
+nav{display:flex;gap:1.6rem}
+nav a{font-family:'Archivo',sans-serif;font-weight:600;font-size:.76rem;letter-spacing:.17em;
+  text-transform:uppercase;color:rgba(255,255,255,.82);text-decoration:none;padding:.3rem 0;
+  border-bottom:2px solid transparent;text-shadow:0 2px 10px rgba(0,0,0,.6);
+  transition:color .2s,border-color .2s}
+nav a:hover{color:#fff;border-color:var(--red)}
+@media(max-width:840px){nav{display:none}}
+
+/* ===== buttons ===== */
+.btn{display:inline-flex;align-items:center;font-family:'Archivo',sans-serif;font-weight:700;
+  font-size:.79rem;letter-spacing:.17em;text-transform:uppercase;padding:.95rem 1.7rem;border:0;
+  cursor:pointer;text-decoration:none;background:var(--red);color:#fff;
+  box-shadow:0 5px 0 0 var(--red-dk);
+  transition:transform .13s cubic-bezier(.2,.8,.3,1),box-shadow .13s,background .2s}
+.btn:hover,.btn:focus-visible{transform:translateY(-3px);box-shadow:0 8px 0 0 var(--red-dk)}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 0 var(--red-dk)}
+.btn.navy{background:var(--navy);box-shadow:0 5px 0 0 var(--navy-2)}
+.btn.navy:hover{box-shadow:0 8px 0 0 var(--navy-2)}
+.btn.navy:active{box-shadow:0 1px 0 0 var(--navy-2)}
+.btn.line{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.45);box-shadow:none}
+.btn.line:hover{border-color:#fff;box-shadow:none}
+
+.rv{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.3,1)}
+.rv.in{opacity:1;transform:none}
+h2{font-size:clamp(2rem,4.6vw,3.2rem)}
+h2 .r{color:var(--red)}
+.lede{margin-top:1.1rem;font-size:1.06rem;color:#3B4A60;max-width:58ch}
+.on-navy .lede{color:#B9C7DE}
+
+/* ===== HERO: split panel + photo ===== */
+#hero{display:grid;grid-template-columns:1fr 1fr;min-height:100vh;min-height:100svh}
+@media(max-width:900px){#hero{grid-template-columns:1fr}}
+.hero-left{background:var(--navy);color:#fff;display:flex;align-items:center;
+  padding:7rem var(--sp) 4rem;position:relative}
+.hero-left::after{content:"";position:absolute;right:0;top:0;bottom:0;width:8px;background:var(--red)}
+@media(max-width:900px){.hero-left::after{width:100%;height:8px;top:auto;bottom:0}}
+.hero-left .inner{max-width:520px;margin-left:auto}
+@media(max-width:900px){.hero-left .inner{margin:0 auto}}
+#hero h1{font-size:clamp(2.5rem,5.2vw,4.1rem);color:#fff}
+#hero h1 em{font-style:normal;color:var(--red);display:block}
+.hero-right{position:relative;min-height:52vh;overflow:hidden}
+.hero-right .photo{position:absolute;inset:0;background-size:cover;background-position:center 68%;
+  transition:transform 1.1s cubic-bezier(.2,.8,.3,1)}
+.hero-right:hover .photo{transform:scale(1.04)}
+.hero-right::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(15,33,64,.5),transparent 40%)}
+.cta{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:2rem}
+
+/* stats strip across the seam */
+.statstrip{background:var(--red);color:#fff}
+.statstrip .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;padding-block:1.9rem}
+@media(max-width:700px){.statstrip .wrap{grid-template-columns:repeat(2,1fr);gap:1.6rem}}
+.stat{text-align:center;transition:transform .28s cubic-bezier(.2,.8,.3,1)}
+.stat:hover{transform:translateY(-6px)}
+.stat b{display:block;font-family:'Archivo',sans-serif;font-weight:900;font-size:2.6rem;line-height:1}
+.stat span{font-family:'Archivo',sans-serif;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;
+  display:block;margin-top:.45rem;line-height:1.45;color:rgba(255,255,255,.85)}
+
+/* ===== centred section ===== */
+section{padding:clamp(3.6rem,8vw,6rem) 0}
+.mid{text-align:center;max-width:62ch;margin:0 auto}
+.mid .lede{margin-left:auto;margin-right:auto}
+
+/* level cards */
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:2.4rem}
+@media(max-width:700px){.levels{grid-template-columns:repeat(2,1fr)}}
+.lev{background:var(--pale);border-bottom:5px solid var(--navy);padding:1.5rem .8rem;text-align:center;
+  transition:transform .28s cubic-bezier(.2,.8,.3,1),background .25s,border-color .25s}
+.lev:hover{transform:translateY(-9px);background:var(--navy);border-color:var(--red)}
+.lev b{display:block;font-family:'Archivo',sans-serif;font-weight:900;font-size:1.7rem;color:var(--navy);
+  transition:color .25s}
+.lev span{font-family:'Archivo',sans-serif;font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;
+  color:#65748C;display:block;margin-top:.4rem;transition:color .25s}
+.lev:hover b{color:#fff} .lev:hover span{color:#F0A9B4}
+
+/* full-bleed photo band */
+.photoband{position:relative;height:clamp(300px,46vw,520px);overflow:hidden}
+.photoband .photo{position:absolute;inset:0;background-size:cover;
+  transition:transform 1.2s cubic-bezier(.2,.8,.3,1)}
+.photoband:hover .photo{transform:scale(1.045)}
+.photoband .cap{position:absolute;left:0;bottom:0;z-index:2;background:var(--red);color:#fff;
+  font-family:'Archivo',sans-serif;font-weight:700;font-size:.76rem;letter-spacing:.18em;
+  text-transform:uppercase;padding:.85rem 1.4rem}
+
+/* ===== numbered timeline ===== */
+.on-navy{background:var(--navy);color:#fff}
+.on-navy h2{color:#fff}
+.rail{margin-top:2.6rem;position:relative;padding-left:0}
+.step{display:grid;grid-template-columns:74px 150px 1fr;gap:1.4rem;align-items:center;
+  padding:1.05rem .6rem;border-top:1px solid rgba(255,255,255,.16);
+  transition:background .25s,transform .28s cubic-bezier(.2,.8,.3,1)}
+.step:last-child{border-bottom:1px solid rgba(255,255,255,.16)}
+.step:hover{background:rgba(200,16,46,.16);transform:translateX(10px)}
+.step .no{font-family:'Archivo',sans-serif;font-weight:900;font-size:1.5rem;color:var(--red);
+  transition:color .25s}
+.step:hover .no{color:#fff}
+.step .lv{font-family:'Archivo',sans-serif;font-weight:700;font-size:.82rem;letter-spacing:.15em;
+  text-transform:uppercase;color:#fff}
+.step .tx{color:#B9C7DE;transition:color .25s}
+.step:hover .tx{color:#fff}
+@media(max-width:760px){
+  .step{grid-template-columns:52px 1fr;gap:.8rem}
+  .step .lv{grid-column:2} .step .tx{grid-column:2;font-size:.95rem}
+  .step .no{grid-row:span 2}
+}
+
+/* ===== quote on red ===== */
+.quote{background:var(--red);color:#fff;text-align:center;padding:clamp(4rem,9vw,7rem) 0}
+.quote blockquote{font-family:'Source Serif 4',Georgia,serif;font-weight:400;font-style:italic;
+  font-size:clamp(1.6rem,3.9vw,2.9rem);line-height:1.16;max-width:24ch;margin:0 auto}
+.quote blockquote .r{display:block;font-style:normal;font-weight:600}
+.quote cite{display:block;margin-top:1.5rem;font-family:'Archivo',sans-serif;font-style:normal;
+  font-size:.74rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.82)}
+
+/* ===== coach ===== */
+.coachwrap{display:grid;grid-template-columns:1fr 340px;gap:clamp(2rem,5vw,4rem);align-items:center}
+@media(max-width:860px){.coachwrap{grid-template-columns:1fr}}
+.headshot{position:relative;aspect-ratio:1;overflow:hidden;background:var(--navy-2);
+  transition:transform .4s cubic-bezier(.2,.8,.3,1)}
+.headshot::after{content:"";position:absolute;inset:0;border:10px solid var(--red);
+  pointer-events:none;transition:border-width .3s}
+.headshot:hover{transform:translateY(-8px)}
+.headshot:hover::after{border-width:16px}
+.headshot img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s cubic-bezier(.2,.8,.3,1)}
+.headshot:hover img{transform:scale(1.06)}
+.coachwrap p{margin-top:1.1rem;color:#B9C7DE}
+.coachwrap p strong{color:#fff;font-weight:600}
+
+/* ===== packages as full-width rows ===== */
+.plist{margin-top:2.6rem;border-top:2px solid var(--navy)}
+.prow{display:grid;grid-template-columns:120px 1fr 1.15fr 210px;gap:1.6rem;align-items:start;
+  padding:2rem .4rem;border-bottom:1px solid var(--pale-2);
+  transition:background .28s,transform .28s cubic-bezier(.2,.8,.3,1)}
+.prow:hover{background:var(--pale);transform:translateX(8px)}
+@media(max-width:980px){.prow{grid-template-columns:1fr;gap:.9rem;padding:1.8rem .4rem}}
+.prow .n{font-family:'Archivo',sans-serif;font-weight:700;font-size:.72rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--red);padding-top:.4rem}
+.prow h3{font-size:1.45rem;color:var(--navy)}
+.prow .who{font-family:'Archivo',sans-serif;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+  color:#65748C;margin-top:.5rem}
+.prow .desc{color:#3B4A60;font-size:.99rem}
+.prow ul{list-style:none;margin-top:.9rem}
+.prow li{display:grid;grid-template-columns:13px 1fr;gap:.6rem;padding:.4rem 0;font-size:.93rem;
+  color:#3B4A60;transition:transform .22s cubic-bezier(.2,.8,.3,1),color .22s}
+.prow li:hover{transform:translateX(7px);color:var(--red)}
+.prow li::before{content:"";width:7px;height:7px;margin-top:.6rem;background:var(--red);
+  clip-path:polygon(0 0,100% 50%,0 100%)}
+.prow .cad{font-family:'Archivo',sans-serif;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;
+  color:#65748C;display:block;margin-bottom:.8rem}
+.prow .btn{width:100%;justify-content:center}
+
+/* ===== booking ===== */
+.calwrap{background:var(--pale);padding:clamp(2rem,5vw,3.4rem) 0}
+.calbox{max-width:760px;margin:2rem auto 0;background:#fff;border:2px solid var(--navy);
+  padding:clamp(1.4rem,3.4vw,2.2rem)}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem}
+@media(max-width:700px){.types{grid-template-columns:1fr}}
+.type{background:var(--navy);border:0;padding:1.1rem;text-align:left;color:#fff;font-family:inherit;
+  cursor:pointer;transition:transform .26s cubic-bezier(.2,.8,.3,1),background .25s}
+.type:hover{transform:translateY(-7px);background:var(--red)}
+.type b{display:block;font-family:'Archivo',sans-serif;font-weight:900;font-size:1.05rem;text-transform:uppercase}
+.type span{font-family:'Archivo',sans-serif;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.78);display:block;margin-top:.25rem}
+.note{font-family:'Archivo',sans-serif;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--red);margin-top:1.1rem;text-align:center}
+
+/* ===== contact ===== */
+.form{display:grid;grid-template-columns:1fr 1fr;gap:1.05rem;margin-top:2.2rem;
+  max-width:840px;margin-left:auto;margin-right:auto}
+@media(max-width:760px){.form{grid-template-columns:1fr}}
+.fw{display:flex;flex-direction:column;gap:.4rem}
+.fw.full{grid-column:1/-1}
+label{font-family:'Archivo',sans-serif;font-weight:600;font-size:.68rem;letter-spacing:.17em;
+  text-transform:uppercase;color:#9DB0CC;transition:color .2s}
+.fw:hover label,.fw:focus-within label{color:var(--red)}
+input,select,textarea{font-family:inherit;font-size:1rem;color:#fff;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.24);padding:.82rem .9rem;
+  transition:border-color .2s,background .2s,transform .2s cubic-bezier(.2,.8,.3,1)}
+input:hover,select:hover,textarea:hover{border-color:rgba(255,255,255,.5)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--red);
+  background:rgba(255,255,255,.12);transform:translateY(-2px)}
+select option{background:var(--navy);color:#fff}
+textarea{resize:vertical;min-height:120px}
+.msg{grid-column:1/-1;font-family:'Archivo',sans-serif;letter-spacing:.1em;text-transform:uppercase;
+  font-size:.78rem;padding:.85rem 1rem;display:none;border-left:4px solid}
+.msg.ok{display:block;color:#9FE3B8;border-color:#3E9A6A;background:rgba(62,154,106,.16)}
+.msg.err{display:block;color:#F5A9B4;border-color:var(--red);background:rgba(200,16,46,.18)}
+.form .btn{grid-column:1/-1;justify-self:center}
+
+footer{background:var(--navy-2);color:#8FA2C0;padding:2.4rem 0}
+footer .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+  font-family:'Archivo',sans-serif;font-size:.73rem;letter-spacing:.15em;text-transform:uppercase}
+footer b{color:#fff;font-weight:700}
+footer .wrap>div{transition:color .25s,transform .25s}
+footer .wrap>div:hover{color:#fff;transform:translateY(-3px)}
+:focus-visible{outline:3px solid var(--red);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important}
+  .rv{opacity:1;transform:none} html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <div class="wrap">
+    <a class="brand" href="#hero">The Program <span>Builder</span></a>
+    <nav>
+      <a href="#gap">The gap</a><a href="#system">The system</a><a href="#coach">The coach</a>
+      <a href="#packages">Packages</a><a href="#book">Book</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<div id="hero">
+  <div class="hero-left">
+    <div class="inner">
+      <div class="kicker">Elite baseball &amp; softball systems</div>
+      <h1>Build the program.<em>Not just the team.</em></h1>
+      <p class="lede" style="color:#B9C7DE">Coach Alan DiGiosio designs the system a whole organization runs on — one language, one set of coverages, one standard, from 9U all the way to varsity.</p>
+      <div class="cta">
+        <a class="btn" href="#book">Book a consult</a>
+        <a class="btn line" href="#packages">See the packages</a>
+      </div>
+    </div>
+  </div>
+  <div class="hero-right"><div class="photo" id="heroPhoto"></div></div>
+</div>
+
+<div class="statstrip">
+  <div class="wrap">
+    <div class="stat"><b>33</b><span>Years on<br>the diamond</span></div>
+    <div class="stat"><b>16</b><span>Head coach<br>baseball</span></div>
+    <div class="stat"><b>12</b><span>Head coach<br>softball</span></div>
+    <div class="stat"><b>2</b><span>Sports,<br>one system</span></div>
+  </div>
+</div>
+
+<!-- ===== THE GAP ===== -->
+<section id="gap">
+  <div class="wrap">
+    <div class="mid rv">
+      <div class="kicker mid">The gap</div>
+      <h2>Same logo.<br><span class="r">Seven different games.</span></h2>
+      <p class="lede">A 10U coach teaches one bunt coverage. The 14U coach teaches another. By the time a player reaches varsity they've learned four systems and mastered none — and the head coach spends the first three weeks of every season un-teaching.</p>
+    </div>
+    <div class="levels rv">
+      <div class="lev"><b>10U</b><span>System A</span></div>
+      <div class="lev"><b>12U</b><span>System B</span></div>
+      <div class="lev"><b>14U</b><span>System C</span></div>
+      <div class="lev"><b>Varsity</b><span>Start over</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="photoband"><div class="photo" id="bandLineup"></div><span class="cap">One roster, one standard</span></div>
+
+<!-- ===== THE SYSTEM ===== -->
+<section class="on-navy" id="system">
+  <div class="wrap">
+    <div class="rv" style="max-width:60ch">
+      <div class="kicker">Vertical integration</div>
+      <h2>One system,<br><span class="r">bottom to top.</span></h2>
+      <p class="lede">Every level runs the same signs, the same coverages, the same approach. A player moving up isn't learning a new game — they're getting more of the one they already know.</p>
+    </div>
+    <div class="rail rv">
+      <div class="step"><span class="no">01</span><span class="lv">9U–10U</span><span class="tx">Introduce the vocabulary — signs, base paths, the standard</span></div>
+      <div class="step"><span class="no">02</span><span class="lv">11U–12U</span><span class="tx">Add coverages: bunt defense, first-and-third, cutoffs</span></div>
+      <div class="step"><span class="no">03</span><span class="lv">13U–14U</span><span class="tx">Situational reps at game speed, same calls as varsity</span></div>
+      <div class="step"><span class="no">04</span><span class="lv">Freshman</span><span class="tx">Nothing new to install — practice time goes to execution</span></div>
+      <div class="step"><span class="no">05</span><span class="lv">JV</span><span class="tx">Roles and depth built against the varsity standard</span></div>
+      <div class="step"><span class="no">06</span><span class="lv">Varsity</span><span class="tx">Week one is competition, not installation</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== QUOTE ===== -->
+<div class="quote">
+  <div class="wrap">
+    <blockquote class="rv">He doesn't fix swings.<span class="r">He builds the structure the swing gets taught inside.</span></blockquote>
+    <cite class="rv">What a program is actually for</cite>
+  </div>
+</div>
+
+<!-- ===== COACH ===== -->
+<section class="on-navy" id="coach">
+  <div class="wrap coachwrap">
+    <div class="rv">
+      <div class="kicker">The architect</div>
+      <h2>Coach Alan<br><span class="r">DiGiosio</span></h2>
+      <p>Thirty-three years on the diamond, twenty-eight of them as a head coach — <strong>sixteen years running high school baseball, twelve running high school softball.</strong> Both sports. Both diamonds. Both cultures.</p>
+      <p>He has managed every part of a program that isn't the game itself: developing assistant coaches, building booster clubs, running facilities, handling the parent who won't let it go. That work decides whether a program holds together, and nobody teaches it.</p>
+    </div>
+    <div class="headshot rv"><img id="picCoach" alt="Coach Alan DiGiosio"></div>
+  </div>
+</section>
+
+<!-- ===== PACKAGES ===== -->
+<section id="packages">
+  <div class="wrap">
+    <div class="rv" style="max-width:62ch">
+      <div class="kicker">Service packages</div>
+      <h2>Three ways<br><span class="r">to bring him in.</span></h2>
+      <p class="lede">Every engagement is scoped to your organization. Pricing is quoted after a short call — tell him the size of the program and what's breaking.</p>
+    </div>
+    <div class="plist">
+      <article class="prow rv">
+        <div class="n">Package 01</div>
+        <div><h3>The Coaching<br>Blueprint Clinic</h3><div class="who">League &amp; club directors · HS head coaches</div></div>
+        <div><p class="desc">A single session for your whole coaching staff, built around the thing every coach is short on: practice time.</p>
+          <ul><li>A practice plan that uses every minute</li><li>Station design for the coaches you actually have</li>
+          <li>Running multiple age groups on one field</li><li>What to cut when weather takes a day</li>
+          <li>Plan templates your staff keeps and reuses</li></ul></div>
+        <div><span class="cad">One-time event</span><a class="btn" href="#contact" data-pkg="Coaching Blueprint Clinic">Request pricing</a></div>
+      </article>
+      <article class="prow rv">
+        <div class="n">Package 02</div>
+        <div><h3>Program-<br>in-a-Box</h3><div class="who">Travel orgs · Rec leagues · HS programs</div></div>
+        <div><p class="desc">A full system design for the organization — the universal language every team from 9U to varsity will run.</p>
+          <ul><li>One signs system across every level</li><li>Standardized bunt coverages and cutoffs</li>
+          <li>A shared hitting approach and terminology</li><li>Efficiency audits — he attends live practices</li>
+          <li>Written documentation your staff hands down</li></ul></div>
+        <div><span class="cad">One-time engagement</span><a class="btn" href="#contact" data-pkg="Program-in-a-Box">Request pricing</a></div>
+      </article>
+      <article class="prow rv">
+        <div class="n">Package 03</div>
+        <div><h3>Coach<br>Mentorship</h3><div class="who">Head coaches · Program directors</div></div>
+        <div><p class="desc">Ongoing one-on-one work on the part of the job that has nothing to do with the game.</p>
+          <ul><li>Conflict resolution — the difficult parent</li><li>Booster club building and fundraising</li>
+          <li>Staff development: teaching coaches to teach</li><li>Facility and equipment planning</li>
+          <li>Someone to call before you send the email</li></ul></div>
+        <div><span class="cad">Ongoing · monthly</span><a class="btn" href="#contact" data-pkg="Coach Mentorship">Request pricing</a></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<div class="photoband"><div class="photo" id="bandCeleb"></div><span class="cap">What it looks like when it works</span></div>
+
+<!-- ===== BOOK ===== -->
+<div class="calwrap" id="book">
+  <div class="wrap">
+    <div class="mid rv">
+      <div class="kicker mid">Scheduling</div>
+      <h2>Twenty minutes,<br><span class="r">no cost.</span></h2>
+      <p class="lede">Bring the shape of your program — number of teams, age range, and the problem you keep running into.</p>
+    </div>
+    <div id="cal-mount" class="rv">
+      <div class="calbox">
+        <div class="types">
+          <button class="type"><b>Clinic</b><span>20 min · video</span></button>
+          <button class="type"><b>Program</b><span>30 min · video</span></button>
+          <button class="type"><b>Mentorship</b><span>20 min · phone</span></button>
+        </div>
+        <p class="note">Demo state — set CAL_USER in the script to go live</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CONTACT ===== -->
+<section class="on-navy" id="contact">
+  <div class="wrap">
+    <div class="mid rv">
+      <div class="kicker mid">Contact</div>
+      <h2>Tell him about<br><span class="r">your program.</span></h2>
+    </div>
+    <form class="form rv" id="cf" novalidate>
+      <div class="fw"><label for="name">Your name</label><input id="name" name="name" type="text" autocomplete="name"></div>
+      <div class="fw"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email"></div>
+      <div class="fw"><label for="org">Organization</label><input id="org" name="organization" type="text"></div>
+      <div class="fw"><label for="role">Your role</label><select id="role" name="role">
+        <option>League or club director</option><option>High school head coach</option><option>Assistant coach</option>
+        <option>Board member</option><option>Parent</option><option>Other</option></select></div>
+      <div class="fw"><label for="pkg">Interested in</label><select id="pkg" name="package">
+        <option>Coaching Blueprint Clinic</option><option>Program-in-a-Box</option>
+        <option>Coach Mentorship</option><option>Not sure yet</option></select></div>
+      <div class="fw"><label for="size">Program size</label><input id="size" name="program_size" type="text"></div>
+      <div class="fw full"><label for="m">What's breaking?</label><textarea id="m" name="message"></textarea></div>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+      <button class="btn" type="submit" id="sb">Send it over</button>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div><b>The Program Builder</b> — Elite Baseball &amp; Softball Systems</div>
+    <div>Coach Alan DiGiosio</div>
+    <div>&copy; 2026</div>
+  </div>
+</footer>
+
+<script>
+/* ==========================================================
+   SWAP AT HANDOFF
+   ========================================================== */
+const FORMSPREE = "https://formspree.io/f/xgawqezn";
+const CAL_USER  = "";
+/* ========================================================== */
+
+const IMG={field:"../assets/field.webp",lineup:"../assets/lineup.webp",celeb:"../assets/celeb.webp",coach:"../assets/coach.webp"};
+document.getElementById('heroPhoto').style.backgroundImage=`url('${IMG.field}')`;
+document.getElementById('bandLineup').style.backgroundImage=`url('${IMG.lineup}')`;
+document.getElementById('bandLineup').style.backgroundPosition='center 34%';
+document.getElementById('bandCeleb').style.backgroundImage=`url('${IMG.celeb}')`;
+document.getElementById('bandCeleb').style.backgroundPosition='center 40%';
+document.getElementById('picCoach').src=IMG.coach;
+
+function onScroll(){ document.getElementById('hdr').classList.toggle('solid',scrollY>60); }
+let t=false;
+addEventListener('scroll',()=>{if(!t){requestAnimationFrame(()=>{onScroll();t=false;});t=true;}},{passive:true});
+onScroll();
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
+}),{threshold:.1,rootMargin:'0px 0px -60px 0px'});
+document.querySelectorAll('.rv').forEach((el,i)=>{el.style.transitionDelay=(i%3)*90+'ms';io.observe(el);});
+
+document.querySelectorAll('[data-pkg]').forEach(b=>b.addEventListener('click',()=>{
+  const s=document.getElementById('pkg'),v=b.dataset.pkg;
+  [...s.options].forEach(o=>{if(o.text===v)s.value=o.value;});
+}));
+
+if(CAL_USER){
+  (function(C,A,L){let p=function(a,ar){a.q.push(ar)};let d=C.document;C.Cal=C.Cal||function(){let cal=C.Cal;let ar=arguments;if(!cal.loaded){cal.ns={};cal.q=cal.q||[];d.head.appendChild(d.createElement("script")).src=A;cal.loaded=true}if(ar[0]===L){const api=function(){p(api,arguments)};const namespace=ar[1];api.q=api.q||[];typeof namespace==="string"?(cal.ns[namespace]=api)&&p(api,ar):p(cal,ar);return}p(cal,ar)}})(window,"https://app.cal.com/embed/embed.js","init");
+  Cal("init",{origin:"https://cal.com"});
+  document.getElementById('cal-mount').innerHTML='<div id="cal-inline"></div>';
+  Cal("inline",{elementOrSelector:"#cal-inline",calLink:CAL_USER,layout:"month_view"});
+  Cal("ui",{cssVarsPerTheme:{light:{"cal-brand":"#C8102E"}}});
+}else{
+  document.querySelectorAll('.type').forEach(b=>b.addEventListener('click',()=>{
+    document.getElementById('contact').scrollIntoView({behavior:'smooth'});
+  }));
+}
+
+const cf=document.getElementById('cf'),msg=document.getElementById('msg'),sb=document.getElementById('sb');
+cf.addEventListener('submit',async e=>{
+  e.preventDefault(); msg.className='msg';
+  const n=cf.name.value.trim(),em=cf.email.value.trim();
+  if(!n||!em.includes('@')){msg.textContent='Add your name and a valid email so he can reply.';msg.className='msg err';return;}
+  sb.disabled=true; sb.textContent='Sending…';
+  try{
+    const r=await fetch(FORMSPREE,{method:'POST',
+      headers:{'Accept':'application/json','Content-Type':'application/json'},
+      body:JSON.stringify(Object.fromEntries(new FormData(cf)))});
+    if(!r.ok) throw 0;
+    cf.reset(); msg.textContent='Sent. Coach DiGiosio will get back to you within a day or two.'; msg.className='msg ok';
+  }catch(_){ msg.textContent='That did not go through. Email coach directly and he will pick it up.'; msg.className='msg err'; }
+  finally{ sb.disabled=false; sb.textContent='Send it over'; }
+});
+</script>
+
+<script>
+/* forward 1/2/3 to the switcher shell — ignored while typing in the form */
+addEventListener('keydown',function(e){
+  var t=(document.activeElement&&document.activeElement.tagName)||'';
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(t)) return;
+  if(e.key==='1'||e.key==='2'||e.key==='3'){
+    if(window.parent!==window) window.parent.postMessage({tpb:'switch',v:e.key},'*');
+  }
+});
+</script>
+</body>
+</html>
