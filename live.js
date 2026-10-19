@@ -34,7 +34,7 @@
   function start(){
     if(editing||!hello)return;editing=true;
     var st=document.createElement("style");
-    st.textContent=".sh-ed{outline:2px dashed transparent!important;outline-offset:3px;cursor:text!important;transition:outline-color .15s}.sh-ed:hover{outline-color:rgba(255,159,26,.85)!important}.sh-ed:focus{outline:2px solid #ff9f1a!important}.sh-img{cursor:pointer!important;outline:2px dashed transparent!important;outline-offset:-2px}.sh-img:hover{outline-color:rgba(255,159,26,.95)!important}#sh-pills{position:fixed;left:12px;bottom:12px;z-index:2147483647;display:flex;flex-direction:column;gap:6px}#sh-pills button{background:#ff9f1a;color:#1a1100;border:0;border-radius:999px;padding:8px 14px;font:600 13px system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35)}";
+    st.textContent=".sh-ed{outline:2px solid transparent!important;outline-offset:3px;cursor:text!important;transition:outline-color .15s}.sh-ed:hover{outline-color:#ff9f1a!important;background:rgba(255,159,26,.14)!important;border-radius:4px}.sh-ed:focus{outline:2px solid #ff9f1a!important}.sh-img{cursor:pointer!important;outline:2px dashed transparent!important;outline-offset:-2px}.sh-img:hover{outline:3px solid #ff9f1a!important;outline-offset:-3px;filter:brightness(1.08)}#sh-pills{position:fixed;left:12px;bottom:12px;z-index:2147483647;display:flex;flex-direction:column;gap:6px}#sh-pills button{background:#ff9f1a;color:#1a1100;border:0;border-radius:999px;padding:8px 14px;font:600 13px system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35)}";
     document.head.appendChild(st);
     document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a");if(a)e.preventDefault()},true);
     document.addEventListener("submit",function(e){e.preventDefault()},true);
@@ -46,7 +46,7 @@
           el.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();pick(k)})}
         else if(!pills.some(function(p){return p.k===k}))pills.push({k:k,l:(labels[k]||k).replace(/ \(leave empty.*$/,"")});
         return}
-      el.setAttribute("contenteditable","true");el.setAttribute("spellcheck","false");el.classList.add("sh-ed");
+      el.setAttribute("contenteditable","true");el.setAttribute("spellcheck","false");el.classList.add("sh-ed");el.title="Click to edit";
       el.addEventListener("input",function(){post({type:"sh-edit",key:k,value:ser(el)})});
       el.addEventListener("keydown",function(e){
         if(e.key==="Enter"){e.preventDefault();if(kind!=="text")document.execCommand("insertLineBreak")}
@@ -61,12 +61,10 @@
     post({type:"sh-ready"});
   }
 
-  fetch(URL_+"/rest/v1/sites?select=id&slug=eq."+encodeURIComponent(cfg.site),{headers:h})
-   .then(function(r){return r.json()}).then(function(s){
-     if(!s[0])return;
-     return fetch(URL_+"/rest/v1/content?select=key,kind,value,label&site_id=eq."+s[0].id,{headers:h}).then(function(r){return r.json()});
+  fetch(URL_+"/rest/v1/rpc/get_content",{method:"POST",headers:{apikey:KEY,"Content-Type":"application/json"},body:JSON.stringify({p_slug:cfg.site})})
+   .then(function(r){return r.json()
    }).then(function(rows){
-     (rows||[]).forEach(function(c){
+     (Array.isArray(rows)?rows:[]).forEach(function(c){
        kinds[c.key]=c.kind;labels[c.key]=c.label;
        if(!c.value)return;
        all(c.key).forEach(function(el){
