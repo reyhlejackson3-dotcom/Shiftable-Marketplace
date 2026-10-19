@@ -96,7 +96,8 @@ function uploadFile(k,f,done){if(f.size>5e6){mode==="ed"?toast("Photo must be un
   done(sb.storage.from("site-images").getPublicUrl(p).data.publicUrl)})}
 function publish(b){var ch=Object.keys(dirty).map(function(k){return{key:k,value:dirty[k]}});if(!ch.length)return;b.disabled=true;
  sb.rpc("publish_changes",{p_site:site.id,p_changes:ch}).then(function(r){
-  if(r.error){b.disabled=false;return mode==="ed"?(toast(errText(r),"err"),updEd()):draw(errText(r))}
+  b.disabled=false;
+  if(r.error){return mode==="ed"?(toast(errText(r),"err"),updEd()):draw(errText(r))}
   rows.forEach(function(c){if(dirty[c.key]!=null)c.value=dirty[c.key]});dirty={};site.used=r.data.used;
   if(mode==="ed"){toast("Published. Your website is updated.","ok");updEd();panel()}else draw("Published. Your site is updated.",true)})}
 
