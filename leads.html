@@ -56,6 +56,14 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#0a0d14}tbody tr.sel{backgroun
 .ck{list-style:none;margin:0;padding:0 12px 10px;display:grid;gap:4px;font-size:13px}
 .ck li{display:flex;justify-content:space-between;gap:10px}
 .ck li.fail{color:#ffb4b4}.ck li.skipped{color:var(--mut)}
+.hist{padding:0}
+.hist summary{cursor:pointer;padding:12px 16px;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:10px}
+.hist summary::-webkit-details-marker{display:none}
+#hl{display:grid;gap:6px;padding:0 12px 12px;max-height:320px;overflow:auto}
+.hq{display:flex;justify-content:space-between;gap:12px;text-align:left;width:100%;background:#070910;color:var(--tx);border:1px solid var(--line);font-weight:500;flex-wrap:wrap}
+.hq:hover{border-color:var(--mint)}.hq.on{border-color:var(--mint);background:#0f1a1a}
+.hq small{color:var(--mut);font-weight:400}
+#chip:empty{display:none}#chip{margin:-4px 0 12px}
 .pad{padding:20px}
 @media(max-width:900px){.layout.p{grid-template-columns:1fr}.panel{position:static}.stats{grid-template-columns:repeat(2,1fr)}.search{grid-template-columns:1fr}}
 </style></head><body><div class="wrap" id="app"></div><div class="toast" id="ts"></div>
@@ -70,7 +78,7 @@ const band=s=>s<60?"r":s<75?"a":"g";
 const grade=s=>s>=90?"A":s>=80?"B":s>=70?"C":s>=60?"D":"F";
 const STATUSES=["new","emailed","replied","won","skip"];
 
-let leads=[],loaded=false,filter="active",maxScore=75,selId=null,scoring=false,stop=false,prog={d:0,t:0};
+let leads=[],loaded=false,filter="active",maxScore=75,selId=null,scoring=false,stop=false,prog={d:0,t:0},searchFilter=null;
 const reports={};
 const FILTERS={
   active:l=>l.status!=="skip",
@@ -105,13 +113,18 @@ function shell(){
   $("app").innerHTML=
   '<div class="top"><h1>Lead finder</h1><div><button class="ghost" onclick="location.href=\'/dashboard.html\'">Back to dashboard</button></div></div>'+
   '<div class="card"><form class="search" id="sf"><input id="st" placeholder="Business type (e.g. plumbers)" maxlength="80"><input id="sc" placeholder="City (e.g. Parker, CO)" maxlength="80"><button id="sb">Find leads</button></form><div class="pill" id="sm" style="margin-top:8px"></div></div>'+
+  '<details class="card hist" id="hist"><summary><span>Past searches</span><span class="pill" id="hn"></span></summary><div id="hl"></div></details>'+
   '<div class="stats" id="stats"></div>'+
-  '<div class="bar"><div id="sa"></div><div><select id="fl"><option value="active">All active</option><option value="needs">Needs work (score at or below max)</option><option value="unscored">Not scored yet</option><option value="no_website">No website</option><option value="skipped">Skipped</option><option value="all">Everything</option></select><label>Max score <input id="mx" type="number" min="0" max="100" value="75"></label><button class="ghost" id="ex" title="Leads with an email, scored, status new, at or below the max score">Export CSV</button></div></div>'+
+  '<div class="bar"><div id="sa"></div><div><select id="fl"><option value="active">All active</option><option value="needs">Needs work (score at or below max)</option><option value="unscored">Not scored yet</option><option value="no_website">No website</option><option value="skipped">Skipped</option><option value="all">Everything</option></select><label>Max score <input id="mx" type="number" min="0" max="100" value="75"></label><button class="ghost" id="ex" title="Leads with an email, scored, status new, at or below the max score">Export CSV</button> <button class="ghost" id="cp" title="Copies every saved field for the leads currently shown, ready to paste into Google Sheets or Excel">Copy all data</button></div></div>'+
+  '<div id="chip" class="pill"></div>'+
   '<div class="layout" id="lay"><div class="card tc" id="tbl"></div><div class="card panel" id="pnl" style="display:none"></div></div>';
   $("sf").onsubmit=search;
   $("fl").onchange=e=>{filter=e.target.value;renderTable()};
   $("mx").oninput=e=>{maxScore=Math.max(0,Math.min(100,Number(e.target.value)||0));renderTable()};
   $("ex").onclick=exportCsv;
+  $("cp").onclick=copyAll;
+  $("hl").addEventListener("click",e=>{const b=e.target.closest("[data-q]");if(b)setSearchFilter(searchFilter===b.dataset.q?null:b.dataset.q)});
+  $("chip").addEventListener("click",e=>{if(e.target.closest("button"))setSearchFilter(null)});
   const tb=$("tbl");
   tb.addEventListener("click",e=>{
     const sc=e.target.closest("[data-score]");if(sc){scoreOne(sc.dataset.score);return}
@@ -127,10 +140,60 @@ async function load(){
     $("tbl").innerHTML='<p class="err pad">'+esc(missing?"The outreach_leads table is missing. Run supabase/outreach_leads.sql in the Supabase SQL editor first.":"Could not load leads: "+r.error.message)+'</p>';return}
   leads=r.data||[];renderStats();renderBar();renderTable()}
 
+/* ---------- past searches (built from the saved leads, so nothing extra to store) ---------- */
+const qOf=l=>l.query||"Unknown search";
+function visibleRows(){return leads.filter(l=>FILTERS[filter](l)&&(!searchFilter||qOf(l)===searchFilter))}
+function renderHistory(){
+  const hl=$("hl");if(!hl)return;
+  const g=new Map();
+  leads.forEach(l=>{const q=qOf(l);let x=g.get(q);if(!x){x={q,n:0,scored:0,emails:0,last:""};g.set(q,x)}
+    x.n++;if(l.score_status==="scored")x.scored++;if(l.email)x.emails++;if((l.created_at||"")>x.last)x.last=l.created_at||""});
+  const list=[...g.values()].sort((a,b)=>a.last<b.last?1:-1);
+  $("hn").textContent=list.length?list.length+" saved":"none yet";
+  hl.innerHTML=list.length?list.map(x=>{const d=x.last?new Date(x.last).toLocaleDateString("en-US",{month:"short",day:"numeric"}):"";
+    return'<button class="hq'+(x.q===searchFilter?" on":"")+'" data-q="'+esc(x.q)+'"><span>'+esc(x.q)+'</span><small>'+x.n+' leads · '+x.scored+' scored · '+x.emails+' emails · '+esc(d)+'</small></button>'}).join(""):'<p class="mut" style="margin:0">Searches you run will be saved here.</p>'}
+function renderChip(){const c=$("chip");if(!c)return;
+  c.innerHTML=searchFilter?'Showing only the search <b>'+esc(searchFilter)+'</b> <button class="ghost sm" id="chx">Show all searches</button>':""}
+function setSearchFilter(q){searchFilter=q;renderHistory();renderChip();renderTable()}
+
+/* ---------- copy everything shown, as tab-separated text that pastes into Google Sheets / Excel ---------- */
+const tsvField=v=>{let s=v==null?"":String(v);s=s.replace(/[\t\r\n]+/g," ");if(/^[=+\-@]/.test(s))s="'"+s;return s.includes('"')?'"'+s.replace(/"/g,'""')+'"':s};
+async function copyText(textPromise){
+  if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
+    try{await navigator.clipboard.write([new ClipboardItem({"text/plain":textPromise.then(t=>new Blob([t],{type:"text/plain"}))})]);return}catch(e){}}
+  const t=await textPromise;
+  try{await navigator.clipboard.writeText(t)}
+  catch(e){const a=document.createElement("textarea");a.value=t;a.style.cssText="position:fixed;opacity:0";document.body.appendChild(a);a.select();const ok=document.execCommand("copy");a.remove();if(!ok)throw new Error("Your browser blocked copying.")}}
+async function copyAll(){
+  const rows=visibleRows();
+  if(!rows.length)return toast("Nothing to copy. Change the filter first.","er");
+  const b=$("cp");b.disabled=true;b.textContent="Copying...";
+  let n=0,ncol=0;
+  try{
+    const build=(async()=>{
+      const ids=rows.map(l=>l.id),full=[];
+      for(let i=0;i<ids.length;i+=100){
+        const r=await sb.from("outreach_leads").select("*").in("id",ids.slice(i,i+100));
+        if(r.error)throw new Error(r.error.message);full.push(...(r.data||[]))}
+      const by=new Map(full.map(x=>[x.id,x]));
+      const L=ids.map(id=>by.get(id)||leads.find(x=>x.id===id));
+      const keys=[],seen=new Set();
+      L.forEach(l=>((l.report&&l.report.categories)||[]).forEach(c=>(c.items||[]).forEach(i=>{const k=c.key+"_"+i.key;if(!seen.has(k)){seen.add(k);keys.push(k)}})));
+      const cs=(r,k)=>{const c=(r.categories||[]).find(x=>x.key===k);return c&&c.score!=null?c.score:""};
+      const ck=(r,k)=>{for(const c of(r.categories||[]))for(const i of(c.items||[]))if(c.key+"_"+i.key===k)return i.earned!=null?i.earned:i.status==="skipped"?"n/a":i.status;return""};
+      const head=["business","search","address","phone","website","email","email_found_on","rating","reviews","status","score_status","score","grade","phone_score_of_25","google_score_of_25","customers_score_of_25","design_score_of_25_estimate","issues","added","scored"].concat(keys.map(k=>"check_"+k));
+      const data=L.map(l=>{const r=l.report||{};return[l.name,l.query,l.address,l.phone,l.website,l.email,l.email_source,l.rating,l.review_count,l.status,l.score_status,l.score,l.score!=null?grade(l.score):"",cs(r,"phone"),cs(r,"google"),cs(r,"customers"),cs(r,"design"),(r.issues||[]).map(i=>i.title).join(" | "),l.created_at,l.scored_at].concat(keys.map(k=>ck(r,k)))});
+      n=data.length;ncol=head.length;
+      return[head].concat(data).map(x=>x.map(tsvField).join("\t")).join("\n")})();
+    await copyText(build);
+    toast("Copied "+n+" lead"+(n===1?"":"s")+" ("+ncol+" columns). Paste into Google Sheets or Excel.","ok")
+  }catch(e){toast(e.message||"Could not copy.","er")}
+  b.disabled=false;b.textContent="Copy all data"}
+
 function toScore(){return leads.filter(l=>(l.score_status==="pending"||l.score_status==="error")&&l.status!=="skip")}
 function renderStats(){
   const n=f=>leads.filter(f).length;
-  $("stats").innerHTML=[[leads.length,"leads"],[n(l=>l.score_status==="scored"),"scored"],[n(l=>l.score_status==="scored"&&l.email),"scored with email"],[n(l=>l.score_status==="no_website"),"no website"]].map(x=>'<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>').join("")}
+  $("stats").innerHTML=[[leads.length,"leads"],[n(l=>l.score_status==="scored"),"scored"],[n(l=>l.score_status==="scored"&&l.email),"scored with email"],[n(l=>l.score_status==="no_website"),"no website"]].map(x=>'<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>').join("");renderHistory()}
 function renderBar(){
   const sa=$("sa");if(!sa)return;
   if(scoring){sa.innerHTML='<button class="ghost" id="stp">Stop</button><span class="pill">Scoring '+prog.d+' / '+prog.t+'... about 20 seconds per site, 3 at a time</span>';$("stp").onclick=()=>{stop=true}}
@@ -140,7 +203,7 @@ function renderBar(){
 
 function renderTable(){
   const t=$("tbl");if(!loaded)return;
-  const rows=leads.filter(FILTERS[filter]);
+  const rows=visibleRows();
   if(!rows.length){t.innerHTML='<p class="mut pad">'+(leads.length?"Nothing matches this filter.":"No leads yet. Run a search above.")+'</p>';return}
   t.innerHTML='<table><thead><tr><th>Business</th><th>Contact</th><th>Score</th><th>Status</th><th></th></tr></thead><tbody>'+rows.map(l=>{
     const web=l.website?'<a class="sm2" href="'+esc(safeHref(l.website))+'" target="_blank" rel="noopener noreferrer">'+esc(hostOf(l.website))+'</a>':'<span class="sm2 mut">no website</span>';
