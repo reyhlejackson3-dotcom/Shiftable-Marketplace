@@ -54,7 +54,7 @@ function list(){sb.rpc("my_sites").then(function(s){var l=s.data||[];window._l=l
  if(!l.length&&!isAdmin){setMode("list");app.innerHTML='<div class="card">No site is linked to this login yet. Email Jack.</div><button class="ghost" onclick="out()">Log out</button>';return}
  if(l.length===1&&!isAdmin)return open(l[0]);
  setMode("list");
- var h='<div class="top"><h1>'+(isAdmin?'All websites':'Your sites')+'</h1><button class="ghost" onclick="out()">Log out</button></div>'+
+ var h='<div class="top"><h1>'+(isAdmin?'All websites':'Your sites')+'</h1><div>'+(isAdmin?'<button class="ghost" onclick="location.href=\'/leads.html\'">Lead finder</button> ':'')+'<button class="ghost" onclick="out()">Log out</button></div></div>'+
   l.map(function(x,i){return'<div class="card"><b>'+esc(x.name)+'</b> <span class="pill">'+esc(x.slug)+' · '+(x.plan==="monthly"?"$250/mo":"$50/mo")+'</span> <button style="float:right" onclick="pick('+i+')">Edit</button></div>'}).join("");
  if(isAdmin)h+='<div class="sec">Add a website</div><div class="card"><div class="f"><label>Business name</label><input id="nn" placeholder="The Program Builder"></div><div class="f"><label>Short id (letters and dashes, goes in the site code)</label><input id="ns" placeholder="program-builder"></div><div class="f"><label>Plan</label><select id="np"><option value="website">$50/mo (1 change a month)</option><option value="monthly">$250/mo (unlimited)</option></select></div><button onclick="addSite()">Add website</button><div class="msg" id="am"></div></div>';
  app.innerHTML=h})}
