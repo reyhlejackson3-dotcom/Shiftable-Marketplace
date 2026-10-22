@@ -45,6 +45,17 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#0a0d14}tbody tr.sel{backgroun
 .sec{color:var(--mint);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:16px 0 4px}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#101420;border:1px solid var(--line);padding:11px 18px;border-radius:999px;z-index:60;display:none;max-width:90vw;font-size:14px}
 .toast.ok{border-color:var(--mint)}.toast.er{border-color:var(--red)}
+.cat{background:#070910;border:1px solid var(--line);border-radius:10px;margin:8px 0}
+.cat summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:6px 10px;padding:10px 12px;align-items:center}
+.cat summary::-webkit-details-marker{display:none}
+.cn{font-weight:600}
+.meter{grid-column:1/-1;height:6px;border-radius:99px;background:#1c2130;overflow:hidden;display:block}
+.meter u{display:block;height:100%;border-radius:99px;background:var(--mint)}
+.meter.r u{background:var(--red)}.meter.a u{background:var(--or)}
+.cnote{margin:0 12px 6px;font-size:12px}
+.ck{list-style:none;margin:0;padding:0 12px 10px;display:grid;gap:4px;font-size:13px}
+.ck li{display:flex;justify-content:space-between;gap:10px}
+.ck li.fail{color:#ffb4b4}.ck li.skipped{color:var(--mut)}
 .pad{padding:20px}
 @media(max-width:900px){.layout.p{grid-template-columns:1fr}.panel{position:static}.stats{grid-template-columns:repeat(2,1fr)}.search{grid-template-columns:1fr}}
 </style></head><body><div class="wrap" id="app"></div><div class="toast" id="ts"></div>
@@ -55,7 +66,8 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const safeHref=u=>/^https?:\/\//i.test(u||"")?u:"#";
 const hostOf=u=>{if(!u)return"";try{return new URL(/^https?:/i.test(u)?u:"https://"+u).hostname.replace(/^www\./,"")}catch(e){return u}};
-const band=s=>s<50?"r":s<70?"a":"g";
+const band=s=>s<60?"r":s<75?"a":"g";
+const grade=s=>s>=90?"A":s>=80?"B":s>=70?"C":s>=60?"D":"F";
 const STATUSES=["new","emailed","replied","won","skip"];
 
 let leads=[],loaded=false,filter="active",maxScore=75,selId=null,scoring=false,stop=false,prog={d:0,t:0};
@@ -122,7 +134,9 @@ function renderStats(){
 function renderBar(){
   const sa=$("sa");if(!sa)return;
   if(scoring){sa.innerHTML='<button class="ghost" id="stp">Stop</button><span class="pill">Scoring '+prog.d+' / '+prog.t+'... about 20 seconds per site, 3 at a time</span>';$("stp").onclick=()=>{stop=true}}
-  else{const n=toScore().length;sa.innerHTML='<button id="sal"'+(n?"":" disabled")+'>Score all unscored ('+n+')</button>';$("sal").onclick=scoreAll}}
+  else{const n=toScore().length,m=leads.filter(l=>l.score_status==="scored"&&l.status!=="skip").length;
+    sa.innerHTML='<button id="sal"'+(n?"":" disabled")+'>Score all unscored ('+n+')</button> <button class="ghost" id="rsc"'+(m?"":" disabled")+' title="Run the current grading again on sites that were already scored">Re-score all ('+m+')</button>';
+    $("sal").onclick=()=>scoreAll(false);$("rsc").onclick=()=>scoreAll(true)}}
 
 function renderTable(){
   const t=$("tbl");if(!loaded)return;
@@ -130,7 +144,7 @@ function renderTable(){
   if(!rows.length){t.innerHTML='<p class="mut pad">'+(leads.length?"Nothing matches this filter.":"No leads yet. Run a search above.")+'</p>';return}
   t.innerHTML='<table><thead><tr><th>Business</th><th>Contact</th><th>Score</th><th>Status</th><th></th></tr></thead><tbody>'+rows.map(l=>{
     const web=l.website?'<a class="sm2" href="'+esc(safeHref(l.website))+'" target="_blank" rel="noopener noreferrer">'+esc(hostOf(l.website))+'</a>':'<span class="sm2 mut">no website</span>';
-    const sc=l.score_status==="scored"&&l.score!=null?'<span class="badge '+band(l.score)+'">'+l.score+'</span>':l.score_status==="no_website"?'<span class="badge n">none</span>':l.score_status==="error"?'<span class="badge n" title="'+esc(l.score_error)+'">error</span>':'<span class="badge n">-</span>';
+    const sc=l.score_status==="scored"&&l.score!=null?'<span class="badge '+band(l.score)+'" title="Click to see the score breakdown">'+l.score+'</span>':l.score_status==="no_website"?'<span class="badge n">none</span>':l.score_status==="error"?'<span class="badge n" title="'+esc(l.score_error)+'">error</span>':'<span class="badge n">-</span>';
     const act=l.score_status==="pending"||l.score_status==="error"?'<button class="ghost sm" data-score="'+esc(l.id)+'"'+(scoring?" disabled":"")+'>Score</button>':"";
     return'<tr data-id="'+esc(l.id)+'"'+(l.id===selId?' class="sel"':"")+'><td><div class="nm">'+esc(l.name)+'</div>'+web+'</td><td class="sm2"><div>'+(l.email?esc(l.email):'<span class="mut">no email found</span>')+'</div><div class="mut">'+esc(l.phone||"")+'</div></td><td>'+sc+'</td><td><select data-st="'+esc(l.id)+'">'+STATUSES.map(s=>'<option'+(s===l.status?" selected":"")+'>'+s+'</option>').join("")+'</select></td><td class="act">'+act+'</td></tr>'}).join("")+'</tbody></table>'}
 
@@ -150,8 +164,13 @@ function replaceLead(l){if(!l)return;const i=leads.findIndex(x=>x.id===l.id);if(
 async function scoreOne(id){
   try{const r=await api("/api/lead-score",{id});replaceLead(r.lead);renderStats();renderBar();renderTable();if(selId===id)renderPanel()}
   catch(e){if(e.message!=="Signed out")toast(e.message,"er")}}
-async function scoreAll(){
-  const q=toScore().map(l=>l.id);if(!q.length)return;
+async function scoreAll(again){
+  let q;
+  if(again){const m=leads.filter(l=>l.score_status==="scored"&&l.status!=="skip");
+    if(!m.length||!confirm("Re-score "+m.length+" sites? Takes about "+Math.ceil(m.length*20/3/60)+" minutes and replaces the old scores."))return;
+    q=m.map(l=>l.id)}
+  else q=toScore().map(l=>l.id);
+  if(!q.length)return;
   stop=false;scoring=true;prog={d:0,t:q.length};renderBar();renderTable();
   let next=0;
   const worker=async()=>{while(!stop){const i=next++;if(i>=q.length)return;
@@ -171,6 +190,15 @@ async function openPanel(id){selId=id;renderTable();$("lay").className="layout p
   if(l&&l.score_status==="scored"&&!reports[id]){
     const r=await sb.from("outreach_leads").select("report").eq("id",id).single();
     if(r.data){reports[id]=r.data.report;if(selId===id)renderPanel()}}}
+function breakdownHtml(r){
+  if(!r.categories)return'<p class="mut">This score was made with the older grading, so there is no breakdown. Press Re-score all to get one.</p>';
+  return'<div class="sec">Score breakdown</div>'+r.categories.map(c=>{
+    const pct=c.score==null?0:Math.round(c.score/c.max*100),col=pct<40?"r":pct<65?"a":"";
+    const rows=(c.items||[]).map(i=>{
+      const mark=i.status==="pass"?"✓":i.status==="fail"?"✗":"–";
+      const pts=i.status==="skipped"?"n/a":i.max!=null&&i.earned!=null?i.earned+" / "+i.max:"";
+      return'<li class="'+esc(i.status)+'"><span>'+mark+" "+esc(i.label)+'</span><span>'+esc(pts)+'</span></li>'}).join("");
+    return'<details class="cat" open><summary><span class="cn">'+esc(c.name)+(c.estimate?" (estimate)":"")+'</span><b>'+(c.score==null?"n/a":c.score+" / "+c.max)+'</b><i class="meter '+col+'"><u style="width:'+pct+'%"></u></i></summary>'+(c.note?'<p class="mut cnote">'+esc(c.note)+'</p>':"")+'<ul class="ck">'+rows+'</ul></details>'}).join("")}
 function closePanel(){selId=null;$("lay").className="layout";$("pnl").style.display="none";renderTable()}
 function renderPanel(){
   const l=leads.find(x=>x.id===selId),p=$("pnl");if(!l||!p)return;
@@ -179,10 +207,11 @@ function renderPanel(){
      '<span>'+(l.email?esc(l.email):'<span class="mut">No email found</span>')+'</span><span>'+esc(l.phone||"")+'</span><span class="mut">'+esc(l.address||"")+'</span>'+
      (l.rating!=null?'<span class="mut">'+esc(l.rating)+' stars · '+esc(l.review_count||0)+' reviews</span>':"")+'</div>';
   if(l.score_status==="scored"&&l.score!=null){
-    h+='<div class="big '+band(l.score)+'">'+l.score+'<span class="pill"> / 100</span></div>';
+    h+='<div class="big '+band(l.score)+'">'+l.score+'<span class="pill"> / 100 · grade '+grade(l.score)+'</span></div>';
     const r=reports[l.id];
     if(!r)h+='<p class="mut">Loading report...</p>';
     else{
+      h+=breakdownHtml(r);
       if(r.issues&&r.issues.length)h+='<div class="sec">Problems found</div><ul class="is">'+r.issues.map(i=>'<li><b>'+esc(i.title)+'</b><p>'+esc(i.detail)+'</p></li>').join("")+'</ul>';
       else h+='<p class="mut">No problems found.</p>';
       if(r.passes&&r.passes.length)h+='<div class="sec">Working fine</div><ul class="is ps">'+r.passes.map(i=>'<li>'+esc(i.title)+'</li>').join("")+'</ul>'}
@@ -198,8 +227,8 @@ async function exportCsv(){
   b.disabled=false;
   if(r.error)return toast("Export failed.","er");
   if(!r.data.length)return toast("Nothing to export. Needs: scored, has an email, status new, score at or below "+maxScore+".","er");
-  const head=["email","business_name","website","phone","address","score","issue_1","issue_2","issue_3","top_issue_detail"];
-  const rows=r.data.map(l=>{const is=(l.report&&l.report.issues)||[];return[l.email,l.name,l.website,l.phone,l.address,l.score,(is[0]||{}).title,(is[1]||{}).title,(is[2]||{}).title,(is[0]||{}).detail]});
+  const head=["email","business_name","website","phone","address","score","grade","issue_1","issue_2","issue_3","top_issue_detail"];
+  const rows=r.data.map(l=>{const is=(l.report&&l.report.issues)||[];return[l.email,l.name,l.website,l.phone,l.address,l.score,grade(l.score),(is[0]||{}).title,(is[1]||{}).title,(is[2]||{}).title,(is[0]||{}).detail]});
   const csv=[head].concat(rows).map(x=>x.map(csvField).join(",")).join("\r\n")+"\r\n";
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="leads-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();
   toast("Exported "+r.data.length+" leads.","ok")}
