@@ -1,0 +1,208 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Shiftable · Lead finder</title><link rel="icon" href="shiftable-favicon.svg">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#03040A;--card:#0d1018;--line:#1c2130;--tx:#eef1f7;--mut:#8a93a8;--mint:#7CFFC0;--or:#f59e0b;--red:#ff6b6b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,Segoe UI,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:22px;margin:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+input,select{background:#070910;color:var(--tx);border:1px solid var(--line);border-radius:9px;padding:9px 12px;font:inherit}
+input:focus,select:focus{outline:1px solid var(--mint)}
+button{background:var(--mint);color:#03130b;border:0;border-radius:9px;padding:9px 16px;cursor:pointer;font:inherit;font-weight:600}
+button.ghost{background:transparent;color:var(--mut);border:1px solid var(--line)}
+button.ghost:hover{color:var(--tx)}button:disabled{opacity:.4;cursor:default}
+button.sm{padding:4px 10px;font-size:13px}
+.pill{font-size:12px;color:var(--mut)}.mut{color:var(--mut)}.err{color:#ffb4b4}.ok{color:var(--mint)}
+.search{display:grid;grid-template-columns:1fr 1fr auto;gap:10px}.search input{width:100%}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.stats div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:grid}
+.stats b{font-size:22px}.stats span{color:var(--mut);font-size:13px}
+.bar{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.bar>div{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar label{color:var(--mut);font-size:14px;display:flex;align-items:center;gap:6px}.bar label input{width:70px}
+.layout{display:grid;gap:14px;align-items:start}.layout.p{grid-template-columns:minmax(0,1fr) 400px}
+.tc{padding:0;overflow-x:auto;margin:0}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:10px 14px;border-bottom:1px solid var(--line);font-weight:500}
+td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr{cursor:pointer}tbody tr:hover{background:#0a0d14}tbody tr.sel{background:#0f1520}tbody tr:last-child td{border-bottom:0}
+.nm{font-weight:600}.sm2{font-size:13px}a{color:var(--mint);text-decoration:none}a:hover{text-decoration:underline}
+.badge{display:inline-block;min-width:40px;text-align:center;font-weight:700;padding:2px 9px;border-radius:999px;color:#03130b}
+.badge.r{background:var(--red)}.badge.a{background:var(--or)}.badge.g{background:var(--mint)}.badge.n{background:#1c2130;color:var(--mut);font-weight:600}
+.act{text-align:right;white-space:nowrap}
+.panel{position:sticky;top:14px;padding:0;overflow:hidden;margin:0}
+.ph{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.pb{padding:14px;max-height:80vh;overflow:auto}
+.big{font-size:44px;font-weight:700;line-height:1}.big.r{color:var(--red)}.big.a{color:var(--or)}.big.g{color:var(--mint)}
+.kv{margin:12px 0;display:grid;gap:3px;font-size:14px}
+.is{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
+.is li{background:#070910;border:1px solid var(--line);border-left:3px solid var(--red);border-radius:9px;padding:9px 12px;font-size:14px}
+.is li p{margin:3px 0 0;color:var(--mut)}
+.ps li{border-left-color:var(--mint)}
+.sec{color:var(--mint);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:16px 0 4px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#101420;border:1px solid var(--line);padding:11px 18px;border-radius:999px;z-index:60;display:none;max-width:90vw;font-size:14px}
+.toast.ok{border-color:var(--mint)}.toast.er{border-color:var(--red)}
+.pad{padding:20px}
+@media(max-width:900px){.layout.p{grid-template-columns:1fr}.panel{position:static}.stats{grid-template-columns:repeat(2,1fr)}.search{grid-template-columns:1fr}}
+</style></head><body><div class="wrap" id="app"></div><div class="toast" id="ts"></div>
+<script>
+var URL_="https://obuudbrlurybwcvuungr.supabase.co", KEY="sb_publishable_uyqV26xV1aLF_HjhIdCYcA_fUgo0KkY";
+const sb=supabase.createClient(URL_,KEY);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const safeHref=u=>/^https?:\/\//i.test(u||"")?u:"#";
+const hostOf=u=>{if(!u)return"";try{return new URL(/^https?:/i.test(u)?u:"https://"+u).hostname.replace(/^www\./,"")}catch(e){return u}};
+const band=s=>s<50?"r":s<70?"a":"g";
+const STATUSES=["new","emailed","replied","won","skip"];
+
+let leads=[],loaded=false,filter="active",maxScore=75,selId=null,scoring=false,stop=false,prog={d:0,t:0};
+const reports={};
+const FILTERS={
+  active:l=>l.status!=="skip",
+  needs:l=>l.score_status==="scored"&&(l.score==null?100:l.score)<=maxScore&&l.status!=="skip",
+  unscored:l=>(l.score_status==="pending"||l.score_status==="error")&&l.status!=="skip",
+  no_website:l=>l.score_status==="no_website"&&l.status!=="skip",
+  skipped:l=>l.status==="skip",
+  all:()=>true
+};
+const COLS="id,name,address,phone,website,rating,review_count,query,email,score,score_status,score_error,status,created_at,scored_at";
+
+function toast(t,k){const e=$("ts");e.textContent=t;e.className="toast "+(k||"");e.style.display="block";clearTimeout(toast._t);toast._t=setTimeout(()=>{e.style.display="none"},4500)}
+function gate(msg,link){$("app").innerHTML='<div class="card" style="max-width:420px;margin:12vh auto"><h1>Lead finder</h1><p class="mut">'+esc(msg)+'</p>'+(link?'<a href="/dashboard.html"><button>Go to the dashboard login</button></a>':'')+'</div>'}
+
+async function token(){const r=await sb.auth.getSession();return r.data.session&&r.data.session.access_token}
+async function api(path,body){
+  const t=await token();if(!t){gate("Your session expired.",true);throw new Error("Signed out")}
+  const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:JSON.stringify(body)});
+  let d={};try{d=await r.json()}catch(e){}
+  if(r.status===401){gate(d.error||"Your session expired.",true);throw new Error("Signed out")}
+  if(!r.ok)throw new Error(d.error||"Request failed ("+r.status+")");
+  return d}
+
+async function boot(){
+  const s=await sb.auth.getSession();
+  if(!s.data.session)return gate("Sign in on the dashboard first, then come back.",true);
+  const a=await sb.from("admins").select("user_id");
+  if(!(a.data&&a.data.length))return gate("This page is for admins only.");
+  shell();await load()}
+
+function shell(){
+  $("app").innerHTML=
+  '<div class="top"><h1>Lead finder</h1><div><button class="ghost" onclick="location.href=\'/dashboard.html\'">Back to dashboard</button></div></div>'+
+  '<div class="card"><form class="search" id="sf"><input id="st" placeholder="Business type (e.g. plumbers)" maxlength="80"><input id="sc" placeholder="City (e.g. Parker, CO)" maxlength="80"><button id="sb">Find leads</button></form><div class="pill" id="sm" style="margin-top:8px"></div></div>'+
+  '<div class="stats" id="stats"></div>'+
+  '<div class="bar"><div id="sa"></div><div><select id="fl"><option value="active">All active</option><option value="needs">Needs work (score at or below max)</option><option value="unscored">Not scored yet</option><option value="no_website">No website</option><option value="skipped">Skipped</option><option value="all">Everything</option></select><label>Max score <input id="mx" type="number" min="0" max="100" value="75"></label><button class="ghost" id="ex" title="Leads with an email, scored, status new, at or below the max score">Export CSV</button></div></div>'+
+  '<div class="layout" id="lay"><div class="card tc" id="tbl"></div><div class="card panel" id="pnl" style="display:none"></div></div>';
+  $("sf").onsubmit=search;
+  $("fl").onchange=e=>{filter=e.target.value;renderTable()};
+  $("mx").oninput=e=>{maxScore=Math.max(0,Math.min(100,Number(e.target.value)||0));renderTable()};
+  $("ex").onclick=exportCsv;
+  const tb=$("tbl");
+  tb.addEventListener("click",e=>{
+    const sc=e.target.closest("[data-score]");if(sc){scoreOne(sc.dataset.score);return}
+    if(e.target.closest("select,a,button"))return;
+    const tr=e.target.closest("tr[data-id]");if(tr)openPanel(tr.dataset.id)});
+  tb.addEventListener("change",e=>{const s=e.target.closest("[data-st]");if(s)setStatus(s.dataset.st,s.value)});
+  renderBar()}
+
+async function load(){
+  const r=await sb.from("outreach_leads").select(COLS).order("created_at",{ascending:false}).limit(1000);
+  loaded=true;
+  if(r.error){const missing=/outreach_leads|schema cache|relation/i.test(r.error.message||"");
+    $("tbl").innerHTML='<p class="err pad">'+esc(missing?"The outreach_leads table is missing. Run supabase/outreach_leads.sql in the Supabase SQL editor first.":"Could not load leads: "+r.error.message)+'</p>';return}
+  leads=r.data||[];renderStats();renderBar();renderTable()}
+
+function toScore(){return leads.filter(l=>(l.score_status==="pending"||l.score_status==="error")&&l.status!=="skip")}
+function renderStats(){
+  const n=f=>leads.filter(f).length;
+  $("stats").innerHTML=[[leads.length,"leads"],[n(l=>l.score_status==="scored"),"scored"],[n(l=>l.score_status==="scored"&&l.email),"scored with email"],[n(l=>l.score_status==="no_website"),"no website"]].map(x=>'<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>').join("")}
+function renderBar(){
+  const sa=$("sa");if(!sa)return;
+  if(scoring){sa.innerHTML='<button class="ghost" id="stp">Stop</button><span class="pill">Scoring '+prog.d+' / '+prog.t+'... about 20 seconds per site, 3 at a time</span>';$("stp").onclick=()=>{stop=true}}
+  else{const n=toScore().length;sa.innerHTML='<button id="sal"'+(n?"":" disabled")+'>Score all unscored ('+n+')</button>';$("sal").onclick=scoreAll}}
+
+function renderTable(){
+  const t=$("tbl");if(!loaded)return;
+  const rows=leads.filter(FILTERS[filter]);
+  if(!rows.length){t.innerHTML='<p class="mut pad">'+(leads.length?"Nothing matches this filter.":"No leads yet. Run a search above.")+'</p>';return}
+  t.innerHTML='<table><thead><tr><th>Business</th><th>Contact</th><th>Score</th><th>Status</th><th></th></tr></thead><tbody>'+rows.map(l=>{
+    const web=l.website?'<a class="sm2" href="'+esc(safeHref(l.website))+'" target="_blank" rel="noopener noreferrer">'+esc(hostOf(l.website))+'</a>':'<span class="sm2 mut">no website</span>';
+    const sc=l.score_status==="scored"&&l.score!=null?'<span class="badge '+band(l.score)+'">'+l.score+'</span>':l.score_status==="no_website"?'<span class="badge n">none</span>':l.score_status==="error"?'<span class="badge n" title="'+esc(l.score_error)+'">error</span>':'<span class="badge n">-</span>';
+    const act=l.score_status==="pending"||l.score_status==="error"?'<button class="ghost sm" data-score="'+esc(l.id)+'"'+(scoring?" disabled":"")+'>Score</button>':"";
+    return'<tr data-id="'+esc(l.id)+'"'+(l.id===selId?' class="sel"':"")+'><td><div class="nm">'+esc(l.name)+'</div>'+web+'</td><td class="sm2"><div>'+(l.email?esc(l.email):'<span class="mut">no email found</span>')+'</div><div class="mut">'+esc(l.phone||"")+'</div></td><td>'+sc+'</td><td><select data-st="'+esc(l.id)+'">'+STATUSES.map(s=>'<option'+(s===l.status?" selected":"")+'>'+s+'</option>').join("")+'</select></td><td class="act">'+act+'</td></tr>'}).join("")+'</tbody></table>'}
+
+async function search(e){
+  e.preventDefault();const type=$("st").value.trim(),city=$("sc").value.trim(),m=$("sm");
+  if(!type||!city){m.className="pill err";m.textContent="Enter a business type and a city.";return}
+  $("sb").disabled=true;$("sb").textContent="Searching...";m.className="pill";m.textContent="";
+  try{
+    const r=await api("/api/lead-search",{type,city});
+    m.className="pill ok";
+    m.textContent=r.found===0?"No businesses found for that search.":"Found "+r.found+". Added "+r.added+" new ("+(r.found-r.added)+" were already in your list). "+r.noWebsite+" of the new ones have no website.";
+    await load()
+  }catch(err){m.className="pill err";m.textContent=err.message}
+  $("sb").disabled=false;$("sb").textContent="Find leads"}
+
+function replaceLead(l){if(!l)return;const i=leads.findIndex(x=>x.id===l.id);if(i>-1)leads[i]=l;delete reports[l.id]}
+async function scoreOne(id){
+  try{const r=await api("/api/lead-score",{id});replaceLead(r.lead);renderStats();renderBar();renderTable();if(selId===id)renderPanel()}
+  catch(e){if(e.message!=="Signed out")toast(e.message,"er")}}
+async function scoreAll(){
+  const q=toScore().map(l=>l.id);if(!q.length)return;
+  stop=false;scoring=true;prog={d:0,t:q.length};renderBar();renderTable();
+  let next=0;
+  const worker=async()=>{while(!stop){const i=next++;if(i>=q.length)return;
+    try{const r=await api("/api/lead-score",{id:q[i]});replaceLead(r.lead)}catch(e){if(e.message==="Signed out"){stop=true;return}}
+    prog.d++;renderBar();renderStats();renderTable();if(selId===q[i])renderPanel()}};
+  await Promise.all([worker(),worker(),worker()]);
+  scoring=false;renderBar();renderTable()}
+
+async function setStatus(id,status){
+  const l=leads.find(x=>x.id===id);if(!l)return;const old=l.status;l.status=status;
+  const r=await sb.from("outreach_leads").update({status}).eq("id",id);
+  if(r.error){l.status=old;toast("Could not save that status.","er")}
+  renderStats();renderBar();renderTable()}
+
+async function openPanel(id){selId=id;renderTable();$("lay").className="layout p";$("pnl").style.display="block";renderPanel();
+  const l=leads.find(x=>x.id===id);
+  if(l&&l.score_status==="scored"&&!reports[id]){
+    const r=await sb.from("outreach_leads").select("report").eq("id",id).single();
+    if(r.data){reports[id]=r.data.report;if(selId===id)renderPanel()}}}
+function closePanel(){selId=null;$("lay").className="layout";$("pnl").style.display="none";renderTable()}
+function renderPanel(){
+  const l=leads.find(x=>x.id===selId),p=$("pnl");if(!l||!p)return;
+  let h='<div class="ph"><b>'+esc(l.name)+'</b><button class="ghost sm" onclick="closePanel()">Close</button></div><div class="pb">';
+  h+='<div class="kv">'+(l.website?'<a href="'+esc(safeHref(l.website))+'" target="_blank" rel="noopener noreferrer">'+esc(l.website)+'</a>':'<span class="mut">No website</span>')+
+     '<span>'+(l.email?esc(l.email):'<span class="mut">No email found</span>')+'</span><span>'+esc(l.phone||"")+'</span><span class="mut">'+esc(l.address||"")+'</span>'+
+     (l.rating!=null?'<span class="mut">'+esc(l.rating)+' stars · '+esc(l.review_count||0)+' reviews</span>':"")+'</div>';
+  if(l.score_status==="scored"&&l.score!=null){
+    h+='<div class="big '+band(l.score)+'">'+l.score+'<span class="pill"> / 100</span></div>';
+    const r=reports[l.id];
+    if(!r)h+='<p class="mut">Loading report...</p>';
+    else{
+      if(r.issues&&r.issues.length)h+='<div class="sec">Problems found</div><ul class="is">'+r.issues.map(i=>'<li><b>'+esc(i.title)+'</b><p>'+esc(i.detail)+'</p></li>').join("")+'</ul>';
+      else h+='<p class="mut">No problems found.</p>';
+      if(r.passes&&r.passes.length)h+='<div class="sec">Working fine</div><ul class="is ps">'+r.passes.map(i=>'<li>'+esc(i.title)+'</li>').join("")+'</ul>'}
+  }else if(l.score_status==="no_website")h+='<p class="mut">No real website found for this business. That is a different pitch: they need a site, not a fix.</p>';
+  else if(l.score_status==="error")h+='<p class="err">Scoring failed: '+esc(l.score_error||"unknown error")+'</p><button onclick="scoreOne(\''+esc(l.id)+'\')">Try again</button>';
+  else h+='<p class="mut">Not scored yet.</p>';
+  p.innerHTML=h+'</div>'}
+
+function csvField(v){let s=v==null?"":String(v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return/[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+async function exportCsv(){
+  const b=$("ex");b.disabled=true;
+  const r=await sb.from("outreach_leads").select("name,email,phone,website,address,score,report").eq("score_status","scored").eq("status","new").not("email","is",null).lte("score",maxScore).order("score",{ascending:true}).limit(1000);
+  b.disabled=false;
+  if(r.error)return toast("Export failed.","er");
+  if(!r.data.length)return toast("Nothing to export. Needs: scored, has an email, status new, score at or below "+maxScore+".","er");
+  const head=["email","business_name","website","phone","address","score","issue_1","issue_2","issue_3","top_issue_detail"];
+  const rows=r.data.map(l=>{const is=(l.report&&l.report.issues)||[];return[l.email,l.name,l.website,l.phone,l.address,l.score,(is[0]||{}).title,(is[1]||{}).title,(is[2]||{}).title,(is[0]||{}).detail]});
+  const csv=[head].concat(rows).map(x=>x.map(csvField).join(",")).join("\r\n")+"\r\n";
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="leads-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();
+  toast("Exported "+r.data.length+" leads.","ok")}
+
+boot();
+</script></body></html>
