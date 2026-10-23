@@ -64,6 +64,10 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#0a0d14}tbody tr.sel{backgroun
 .hq:hover{border-color:var(--mint)}.hq.on{border-color:var(--mint);background:#0f1a1a}
 .hq small{color:var(--mut);font-weight:400}
 #chip:empty{display:none}#chip{margin:-4px 0 12px}
+.ib{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;background:#070910;border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:left}
+.ib.done{opacity:.55}.ib .l2{font-size:14px;display:flex;gap:6px 16px;flex-wrap:wrap}.ib .l2 a{color:var(--mint)}
+.ib .l3{grid-column:1/-1;color:var(--mut);font-size:12.5px}.ib label{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--mut);cursor:pointer}
+#inl{display:grid;gap:8px;padding:0 12px 12px;max-height:460px;overflow:auto}
 .pad{padding:20px}
 @media(max-width:900px){.layout.p{grid-template-columns:1fr}.panel{position:static}.stats{grid-template-columns:repeat(2,1fr)}.search{grid-template-columns:1fr}}
 </style></head><body><div class="wrap" id="app"></div><div class="toast" id="ts"></div>
@@ -114,6 +118,7 @@ function shell(){
   '<div class="top"><h1>Lead finder</h1><div><button class="ghost" onclick="location.href=\'/dashboard.html\'">Back to dashboard</button></div></div>'+
   '<div class="card"><form class="search" id="sf"><input id="st" placeholder="Business type (e.g. plumbers)" maxlength="80"><input id="sc" placeholder="City (e.g. Parker, CO)" maxlength="80"><button id="sb">Find leads</button></form><div class="pill" id="sm" style="margin-top:8px"></div></div>'+
   '<details class="card hist" id="hist"><summary><span>Past searches</span><span class="pill" id="hn"></span></summary><div id="hl"></div></details>'+
+  '<details class="card hist" id="inb" open><summary><span>Inbound: people who used the website scorer</span><span class="pill" id="inn"></span></summary><div id="inl"><p class="mut" style="margin:0">Loading...</p></div></details>'+
   '<div class="stats" id="stats"></div>'+
   '<div class="bar"><div id="sa"></div><div><select id="fl"><option value="active">All active</option><option value="needs">Needs work (score at or below max)</option><option value="unscored">Not scored yet</option><option value="no_website">No website</option><option value="skipped">Skipped</option><option value="all">Everything</option></select><label>Max score <input id="mx" type="number" min="0" max="100" value="75"></label><button class="ghost" id="ex" title="Leads with an email, scored, status new, at or below the max score">Export CSV</button> <button class="ghost" id="cp" title="Copies every saved field for the leads currently shown, ready to paste into Google Sheets or Excel">Copy all data</button></div></div>'+
   '<div id="chip" class="pill"></div>'+
@@ -123,6 +128,7 @@ function shell(){
   $("mx").oninput=e=>{maxScore=Math.max(0,Math.min(100,Number(e.target.value)||0));renderTable()};
   $("ex").onclick=exportCsv;
   $("cp").onclick=copyAll;
+  $("inl").addEventListener("change",e=>{const c=e.target.closest("[data-done]");if(c)setContacted(c.dataset.done,c.checked)});
   $("hl").addEventListener("click",e=>{const b=e.target.closest("[data-q]");if(b)setSearchFilter(searchFilter===b.dataset.q?null:b.dataset.q)});
   $("chip").addEventListener("click",e=>{if(e.target.closest("button"))setSearchFilter(null)});
   const tb=$("tbl");
@@ -138,7 +144,32 @@ async function load(){
   loaded=true;
   if(r.error){const missing=/outreach_leads|schema cache|relation/i.test(r.error.message||"");
     $("tbl").innerHTML='<p class="err pad">'+esc(missing?"The outreach_leads table is missing. Run supabase/outreach_leads.sql in the Supabase SQL editor first.":"Could not load leads: "+r.error.message)+'</p>';return}
-  leads=r.data||[];renderStats();renderBar();renderTable()}
+  leads=r.data||[];renderStats();renderBar();renderTable();loadInbound()}
+
+/* ---------- inbound: visitors who unlocked a report on the public website scorer ---------- */
+let inbound=[];
+async function loadInbound(){
+  const base="id,host,score,grade,name,email,phone,unlocked_at,contacted";
+  let r=await sb.from("scorer_scans").select(base+",top:report->issues->0->>title").not("unlocked_at","is",null).order("unlocked_at",{ascending:false}).limit(300);
+  if(r.error)r=await sb.from("scorer_scans").select(base).not("unlocked_at","is",null).order("unlocked_at",{ascending:false}).limit(300);
+  if(r.error){const missing=/scorer_scans|schema cache|relation/i.test(r.error.message||"");
+    $("inn").textContent="";$("inl").innerHTML='<p class="err" style="margin:0">'+esc(missing?"The scorer_scans table is missing. Run supabase/scorer_scans.sql in the Supabase SQL editor.":"Could not load: "+r.error.message)+'</p>';return}
+  inbound=r.data||[];renderInbound()}
+function renderInbound(){
+  const el=$("inl");if(!el)return;
+  const fresh=inbound.filter(x=>!x.contacted).length;
+  $("inn").textContent=inbound.length?fresh+" to contact · "+inbound.length+" total":"none yet";
+  el.innerHTML=inbound.length?inbound.map(x=>{
+    const d=x.unlocked_at?new Date(x.unlocked_at).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"";
+    const tel=String(x.phone||"").replace(/\D/g,"");
+    return'<div class="ib'+(x.contacted?" done":"")+'"><div><b>'+esc(x.host)+'</b> <span class="pill '+band(x.score)+'">'+esc(x.grade||"")+" · "+esc(x.score)+'</span>'+(x.name?" · "+esc(x.name):"")+'</div>'+
+      '<label><input type="checkbox" data-done="'+esc(x.id)+'"'+(x.contacted?" checked":"")+'> Contacted</label>'+
+      '<div class="l2">'+(x.phone?'<a href="tel:+1'+esc(tel)+'">'+esc(x.phone)+'</a>':"")+(x.email?'<a href="mailto:'+esc(x.email)+'">'+esc(x.email)+'</a>':"")+'</div>'+
+      '<div class="l3">'+esc(d)+(x.top?" · Top problem: "+esc(x.top):"")+'</div></div>'}).join(""):'<p class="mut" style="margin:0">Nobody has unlocked a report yet.</p>'}
+async function setContacted(id,v){
+  const r=await sb.from("scorer_scans").update({contacted:v}).eq("id",id);
+  if(r.error){toast("Could not save: "+r.error.message,"er");return loadInbound()}
+  const x=inbound.find(i=>i.id===id);if(x)x.contacted=v;renderInbound()}
 
 /* ---------- past searches (built from the saved leads, so nothing extra to store) ---------- */
 const qOf=l=>l.query||"Unknown search";
