@@ -14,7 +14,7 @@ async function runPageSpeed(url) {
   for (const c of ['performance', 'seo', 'accessibility', 'best-practices']) params.append('category', c);
 
   const res = await fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${params}`, {
-    signal: AbortSignal.timeout(50000),
+    signal: AbortSignal.timeout(42000),
   });
 
   if (!res.ok) {
@@ -42,8 +42,20 @@ async function runPageSpeed(url) {
     bestPractices: val(cats['best-practices']),
     lcpSeconds: typeof lcpMs === 'number' ? lcpMs / 1000 : null,
     finalUrl: lh.finalUrl || lh.finalDisplayedUrl || null,
+    // A phone screenshot of the page, used to judge the design. Callers take it off with takeScreenshot()
+    // before the numbers are saved, so it never ends up in the database.
+    screenshot: (lh.audits && lh.audits['final-screenshot'] && lh.audits['final-screenshot'].details && lh.audits['final-screenshot'].details.data) || null,
   };
 }
+
+function takeScreenshot(psi) {
+  const s = (psi && psi.screenshot) || null;
+  if (psi) delete psi.screenshot;
+  return s;
+}
+
+// Used when PageSpeed fails but the page itself loaded: speed and design show as "n/a" instead of failing the whole scan.
+const emptyPsi = () => ({ performance: null, seo: null, accessibility: null, bestPractices: null, lcpSeconds: null, finalUrl: null });
 
 // ---------------------------------------------------------------------------
 // Files that live next to the homepage: robots.txt and the sitemap.
@@ -276,25 +288,6 @@ function gradeLetter(score) {
   return score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 60 ? 'D' : 'F';
 }
 
-// Small stable hash so a given domain always gets the same design number.
-function seedHash(str) {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619) >>> 0;
-  }
-  return h >>> 0;
-}
-const pickInRange = (seed, lo, hi) => lo + (seed % (hi - lo + 1));
-
-function hostKey(url) {
-  try {
-    return new URL(url).hostname.toLowerCase().replace(/^www\./, '');
-  } catch {
-    return String(url || '');
-  }
-}
-
 function buildReport(psi, h, finalUrl, ex) {
   ex = ex || {};
   const city = ex.city || null;
@@ -478,9 +471,14 @@ function buildReport(psi, h, finalUrl, ex) {
     });
   }
 
-  // ---- Design (25): an estimate, not a measurement ----
+  // ---- Design (25): judged by looking at a phone screenshot (see design.js) ----
+  // The old-site signals below still act as a hard cap, because they are facts, not opinions:
+  // a DIY builder, an out-of-date footer year or old code keeps the design score at 7 or lower.
+  const judged = ex.design && typeof ex.design.score === 'number' ? ex.design : null;
   let designScore = null;
+  let designNote = null;
   const designItems = [];
+  let hits = [];
   if (h) {
     const yearOld = !!(h.copyrightYear && h.copyrightYear < thisYear - 1);
     const triggers = [
@@ -492,7 +490,7 @@ function buildReport(psi, h, finalUrl, ex) {
       {
         key: 'year', hit: yearOld, skipped: !h.copyrightYear, label: 'Footer date is current',
         title: 'Footer is out of date',
-        detail: `The bottom of your site says © ${h.copyrightYear || ''}. An old date makes a business look closed or forgotten.`,
+        detail: `The bottom of your site says \u00a9 ${h.copyrightYear || ''}. An old date makes a business look closed or forgotten.`,
       },
       {
         key: 'oldtech', hit: h.oldTech.length > 0, skipped: false, label: 'Not built on old technology',
@@ -500,25 +498,39 @@ function buildReport(psi, h, finalUrl, ex) {
         detail: `The code behind your site looks like it's from the early 2010s or older (${h.oldTech.join(', ')}). That usually means it's slower, harder to update and less secure.`,
       },
     ];
-    const hits = triggers.filter((x) => x.hit);
-    const seed = seedHash(hostKey(finalUrl) + '|design');
-    designScore = hits.length ? pickInRange(seed, 1, 7) : pickInRange(seed, 15, 23);
-    const each = Math.max(1, Math.round((CAT_MAX - designScore) / Math.max(1, hits.length)));
+    hits = triggers.filter((x) => x.hit);
     for (const x of triggers) {
       designItems.push({ key: x.key, label: x.label, max: null, earned: null, status: x.skipped ? 'skipped' : x.hit ? 'fail' : 'pass' });
       if (x.skipped) continue;
       checked += 1;
-      if (x.hit) issues.push({ key: x.key, title: x.title, detail: x.detail, points: each });
+      if (x.hit) issues.push({ key: x.key, title: x.title, detail: x.detail, points: judged ? 4 : 5 });
       else passes.push({ key: x.key, title: x.label });
     }
+  }
+  if (judged) {
+    const base = Math.max(1, Math.min(CAT_MAX - 1, Math.round(judged.score)));
+    designScore = hits.length ? Math.min(base, 7) : base;
+    designNote = judged.summary || null;
+    if (hits.length && base > 7) {
+      designNote = (designNote ? designNote + ' ' : '') + 'Held at 7 or lower because of the old-site warning signs below.';
+    }
+    designItems.unshift({ key: 'look', label: 'Looks professional and modern', max: null, earned: null, status: judged.score >= 15 ? 'pass' : 'fail' });
+    checked += 1;
+    for (const p of judged.problems || []) {
+      issues.push({ key: 'design-look', title: p.title, detail: p.detail, points: Math.max(1, Math.round((CAT_MAX - designScore) / 4)) });
+    }
+    for (const t of judged.strengths || []) passes.push({ key: 'design-good', title: t });
+  } else {
+    designNote = "We couldn't get a look at the design this time, so it isn't scored.";
   }
   categories.push({
     key: 'design',
     name: CATEGORY_NAMES.design,
     max: CAT_MAX,
     score: designScore,
-    estimate: true,
-    note: 'An estimate from how old the site looks, not a measurement. A DIY builder, an old footer year or old code puts it at 1-7; otherwise 15-23. It is never 25.',
+    estimate: false,
+    judged: !!judged,
+    note: designNote,
     items: designItems,
   });
 
@@ -531,11 +543,12 @@ function buildReport(psi, h, finalUrl, ex) {
   return {
     score,
     report: {
-      version: 3,
+      version: 4,
       categories,
       issues,
       passes: passes.slice(0, 6),
       psi,
+      partial: !!ex.partial,
       finalUrl,
       checked,
       meta: h ? { city, builder: h.builder, oldTech: h.oldTech, words: h.words, spa: h.spa } : { city },
@@ -544,4 +557,4 @@ function buildReport(psi, h, finalUrl, ex) {
   };
 }
 
-module.exports = { runPageSpeed, siteExtras, cityFromAddress, analyzeHtml, buildReport, gradeLetter };
+module.exports = { runPageSpeed, takeScreenshot, emptyPsi, siteExtras, cityFromAddress, analyzeHtml, buildReport, gradeLetter };
