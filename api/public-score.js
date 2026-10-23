@@ -2,7 +2,8 @@
 
 const { rest, readBody, httpError } = require('./_lib/supa');
 const { fetchHtml } = require('./_lib/http');
-const { analyzeHtml, buildReport, runPageSpeed, siteExtras, gradeLetter } = require('./_lib/score');
+const { analyzeHtml, buildReport, runPageSpeed, takeScreenshot, emptyPsi, siteExtras, gradeLetter } = require('./_lib/score');
+const { judgeDesign } = require('./_lib/design');
 const { normalizeUrl, hostOf, isSafePublicHost, isThirdPartyProfile } = require('./_lib/url');
 const { ipHash, teaser } = require('./_lib/pub');
 
@@ -42,7 +43,7 @@ module.exports = async (req, res) => {
     // 2. Reuse a recent score for the same site.
     const hit = await rest(
       `scorer_scans?host=eq.${encodeURIComponent(host)}&status=eq.scored&created_at=gte.${encodeURIComponent(ago(CACHE_DAYS * 864e5))}` +
-        `&select=score,grade,report&order=created_at.desc&limit=1`
+        `&report->>partial=eq.false&select=score,grade,report&order=created_at.desc&limit=1`
     );
     const cached = hit && hit[0];
 
@@ -69,16 +70,32 @@ module.exports = async (req, res) => {
       return res.status(200).json(teaser({ id: rowId, host, grade: cached.grade, score: cached.score, report: cached.report }));
     }
 
-    const [psi, page, extras] = await Promise.all([runPageSpeed(url), fetchHtml(url), siteExtras(url)]);
+    const [psiRes, page, extras] = await Promise.all([
+      runPageSpeed(url).then((v) => ({ v }), (e) => ({ e })),
+      fetchHtml(url),
+      siteExtras(url),
+    ]);
+    let psi = psiRes.v, partial = false;
+    if (!psi) {
+      // PageSpeed couldn't test the site. If the page itself opened we still score what we can
+      // (speed and design show as n/a) instead of failing at the last step.
+      if (!page) throw psiRes.e;
+      console.error('public-score: PageSpeed failed, scoring without it:', psiRes.e && psiRes.e.message);
+      psi = emptyPsi();
+      partial = true;
+    }
+    const design = await judgeDesign(takeScreenshot(psi));
     const finalUrl = (page && page.url) || psi.finalUrl || url;
-    const { score, report } = buildReport(psi, page ? analyzeHtml(page.html, null) : null, finalUrl, { ...extras, city: null });
+    const { score, report } = buildReport(psi, page ? analyzeHtml(page.html, null) : null, finalUrl, { ...extras, city: null, design, partial });
     const grade = gradeLetter(score);
 
     await rest(`scorer_scans?id=eq.${rowId}`, { method: 'PATCH', body: { status: 'scored', score, grade, report } });
     return res.status(200).json(teaser({ id: rowId, host, grade, score, report }));
   } catch (e) {
     if (rowId) {
-      try { await rest(`scorer_scans?id=eq.${rowId}`, { method: 'PATCH', body: { status: 'error' } }); } catch { /* ignore */ }
+      try {
+        await rest(`scorer_scans?id=eq.${rowId}`, { method: 'PATCH', body: { status: 'error', report: { error: String((e && e.message) || e).slice(0, 400) } } });
+      } catch { /* ignore */ }
     }
     if (e && e.status && e.status < 500) return res.status(e.status).json({ error: e.message });
     if (e && e.status === 503) return res.status(503).json({ error: e.message });
@@ -91,4 +108,5 @@ module.exports = async (req, res) => {
         : 'Something went wrong scoring that site. Please try again in a minute.',
     });
   }
+};
 };
