@@ -3,7 +3,13 @@
 const { rest, readBody, httpError } = require('./_lib/supa');
 const { fetchHtml } = require('./_lib/http');
 const { analyzeHtml, buildReport, runPageSpeed, takeScreenshot, emptyPsi, siteExtras, gradeLetter } = require('./_lib/score');
-const { judgeDesign } = require('./_lib/design');
+// If design.js is missing from a deploy, scoring still works and Design shows n/a, instead of the whole endpoint crashing.
+let judgeDesign = async () => null;
+try {
+  ({ judgeDesign } = require('./_lib/design'));
+} catch (e) {
+  console.error('api/_lib/design.js could not be loaded:', e && e.message);
+}
 const { normalizeUrl, hostOf, isSafePublicHost, isThirdPartyProfile } = require('./_lib/url');
 const { ipHash, teaser } = require('./_lib/pub');
 
