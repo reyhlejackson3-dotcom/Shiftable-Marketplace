@@ -300,6 +300,115 @@ form.f{display:grid;gap:10px;margin-top:16px}
   [data-in=left],[data-in=right]{transform:translateY(70px)}
 }
 @media (prefers-reduced-motion:reduce){.awning{transform:none;transition:none}[data-in]{opacity:1;transform:none;transition:none}.cue svg{animation:none}}
+
+/* ---------- free website score ---------- */
+#score{padding-top:clamp(70px,11vh,130px);padding-bottom:clamp(70px,11vh,130px)}
+.sc-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:clamp(24px,4vw,64px);align-items:center}
+.sc-grid.wide{grid-template-columns:1fr}
+.sc-grid.wide .sc-stage{max-width:1000px;width:100%;justify-self:center}
+#score h2{font-size:clamp(38px,5.2vw,84px)}
+.sc-form{display:flex;gap:10px;margin-top:26px;max-width:540px;flex-wrap:wrap}
+.sc-form input{flex:1 1 240px;min-width:0;background:#0b0a12;border:1px solid rgba(255,255,255,.2);border-radius:99px;padding:15px 22px;color:#fff;font:500 16px Inter,sans-serif;outline:none;transition:border-color .2s,box-shadow .2s}
+.sc-form input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,255,192,.2)}
+.sc-btn{border:0;border-radius:99px;background:var(--accent);color:#06110C;font:700 16px Inter,sans-serif;padding:15px 26px;cursor:pointer;transition:transform .2s,background .2s;white-space:nowrap}
+.sc-btn:hover{transform:translateY(-2px);background:#a6ffd6}
+.sc-btn:disabled{opacity:.6;cursor:default;transform:none}
+.sc-btn.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3)}
+.sc-btn.ghost:hover{background:#fff;color:#0a0c16}
+.sc-note{margin-top:12px;font-size:13px;color:rgba(244,246,250,.62);text-shadow:0 1px 12px rgba(0,0,0,.6)}
+.sc-err{min-height:20px;margin-top:10px;font-size:14px;color:#ff9aa8;text-shadow:0 1px 12px rgba(0,0,0,.6)}
+.sc-stage{position:relative;min-height:430px;padding:clamp(20px,2.2vw,32px)}
+.sc-pane{display:none}
+.sc-pane.on{display:block;animation:scIn .55s var(--ease-out)}
+@keyframes scIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.sc-tag{font:700 11px 'Space Grotesk',Inter,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:8px;margin-bottom:18px}
+.sc-tag i{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:scPulse 1.6s ease-in-out infinite}
+@keyframes scPulse{50%{opacity:.35}}
+
+/* grade tile + headline row */
+.sc-top{display:flex;align-items:center;gap:clamp(16px,2vw,28px);margin-bottom:20px}
+.sc-grade{flex:none;width:clamp(86px,9vw,124px);aspect-ratio:1;border-radius:26px;display:grid;place-items:center;font:700 clamp(54px,6vw,86px)/1 'Space Grotesk',Inter,sans-serif;color:var(--gc,#fff);
+  background:rgba(255,255,255,.05);border:2px solid var(--gc,#fff);box-shadow:0 0 44px color-mix(in srgb,var(--gc,#fff) 35%,transparent)}
+.sc-top h3{font:700 clamp(20px,2.2vw,30px)/1.15 'Space Grotesk',Inter,sans-serif;letter-spacing:-.01em}
+.sc-top p{margin-top:6px;font-size:14.5px;line-height:1.45;color:rgba(244,246,250,.72)}
+.sc-top p b{color:#fff}
+
+/* category rows (demo, blurred teaser, full) */
+.sc-cats{display:grid;gap:12px}
+.sc-cat{display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center}
+.sc-cat span{font-size:15px;font-weight:600}
+.sc-cat b{font:700 15px 'Space Grotesk',Inter,sans-serif;font-variant-numeric:tabular-nums}
+.sc-meter{grid-column:1/-1;height:9px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;display:block}
+.sc-meter u{display:block;height:100%;width:0;border-radius:inherit;background:var(--accent);text-decoration:none}
+.sc-meter.a u{background:#FFD166}.sc-meter.r u{background:#FF7A8A}
+
+/* scanning pane */
+.sc-scan{display:grid;grid-template-columns:auto 1fr;gap:clamp(18px,2.6vw,36px);align-items:center}
+.sc-phone{position:relative;width:104px;height:200px;border-radius:20px;border:2px solid rgba(255,255,255,.28);background:#0a0c16;overflow:hidden;padding:14px 10px;display:grid;gap:8px;align-content:start}
+.sc-phone i{display:block;height:9px;border-radius:5px;background:rgba(255,255,255,.12)}
+.sc-phone i:nth-child(1){width:60%;height:12px;background:rgba(124,255,192,.35)}
+.sc-phone i:nth-child(3){height:44px;border-radius:9px}
+.sc-phone i:nth-child(5){width:80%}
+.sc-phone::after{content:'';position:absolute;left:0;right:0;height:46px;top:-46px;background:linear-gradient(180deg,transparent,rgba(124,255,192,.45));border-bottom:2px solid var(--accent);animation:scSweep 2.2s linear infinite}
+@keyframes scSweep{to{transform:translateY(250px)}}
+.sc-steps{list-style:none;padding:0;display:grid;gap:11px}
+.sc-steps li{display:flex;align-items:center;gap:12px;font-size:15px;color:rgba(244,246,250,.4);transition:color .3s}
+.sc-steps li .d{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.22);display:grid;place-items:center;font-size:12px;font-weight:800;color:#06110C}
+.sc-steps li.go{color:#fff}
+.sc-steps li.go .d{border-color:var(--accent) transparent var(--accent) var(--accent);animation:scSpin .8s linear infinite}
+.sc-steps li.ok{color:rgba(244,246,250,.9)}
+.sc-steps li.ok .d{background:var(--accent);border-color:var(--accent)}
+.sc-steps li.ok .d::before{content:'\2713'}
+@keyframes scSpin{to{transform:rotate(360deg)}}
+.sc-wait{margin-top:20px;font-size:13px;color:rgba(244,246,250,.55)}
+
+/* locked teaser */
+.sc-lock{position:relative}
+.sc-blur{min-height:370px;filter:blur(7px);pointer-events:none;user-select:none;-webkit-user-select:none}
+.sc-fake{display:grid;gap:10px;margin-top:20px}
+.sc-fake i{display:block;height:12px;border-radius:6px;background:rgba(255,255,255,.22)}
+.sc-gate{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:min(390px,calc(100% - 16px));padding:clamp(18px,2vw,26px);border-radius:20px;background:rgba(10,12,24,.92);border:1px solid rgba(124,255,192,.45);box-shadow:0 24px 70px rgba(0,0,0,.7),0 0 50px rgba(124,255,192,.12)}
+.sc-gate h4{font:700 clamp(19px,1.7vw,24px)/1.15 'Space Grotesk',Inter,sans-serif;margin-bottom:4px}
+.sc-gate p.s{font-size:13.5px;line-height:1.45;color:rgba(244,246,250,.7);margin-bottom:12px}
+.sc-gate form{display:grid;gap:9px}
+.sc-gate input[type=text],.sc-gate input[type=email],.sc-gate input[type=tel]{width:100%;background:#0b0a12;border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 14px;color:#fff;font:400 15px Inter,sans-serif;outline:none;transition:border-color .2s,box-shadow .2s}
+.sc-gate input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,255,192,.2)}
+.sc-gate .row2{gap:9px}
+.sc-chk{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.4;color:rgba(244,246,250,.65)}
+.sc-chk input{flex:none;margin-top:2px;width:16px;height:16px;accent-color:#7CFFC0}
+.sc-gate .sc-btn{width:100%}
+
+/* full report */
+.sc-score{font:700 15px 'Space Grotesk',Inter,sans-serif;color:rgba(255,255,255,.6);letter-spacing:.04em;margin-top:8px}
+.sc-score b{font-size:1.9em;color:#fff;letter-spacing:-.02em}
+.sc-full-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,2vw,26px);align-items:start}
+.sc-cardx{padding:18px 20px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}
+.sc-cardx summary{list-style:none;cursor:pointer}
+.sc-cardx summary::-webkit-details-marker{display:none}
+.sc-cardx ul{list-style:none;padding:0;margin-top:12px;display:grid;gap:7px}
+.sc-cardx li{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;line-height:1.35;color:rgba(244,246,250,.78)}
+.sc-cardx li.fail{color:#ffb3bd}.sc-cardx li.pass{color:rgba(244,246,250,.9)}.sc-cardx li.skipped{color:rgba(244,246,250,.4)}
+.sc-cardx li span:last-child{color:rgba(244,246,250,.5);white-space:nowrap}
+.sc-est{font-size:12px;line-height:1.4;color:rgba(244,246,250,.5);margin-top:10px}
+.sc-h{font:700 12px 'Space Grotesk',Inter,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+.sc-issues{list-style:none;padding:0;display:grid;gap:12px}
+.sc-issues li{padding:14px 18px;border-radius:14px;background:rgba(255,125,150,.07);border:1px solid rgba(255,125,150,.22)}
+.sc-issues b{display:block;font-size:15px;margin-bottom:4px}
+.sc-issues p{font-size:13.5px;line-height:1.5;color:rgba(244,246,250,.72)}
+.sc-ok{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.sc-ok li{font-size:13px;padding:6px 12px;border-radius:99px;background:rgba(124,255,192,.1);border:1px solid rgba(124,255,192,.3);color:#bff5da}
+.sc-cta{margin-top:30px;padding:22px 24px;border-radius:18px;background:rgba(124,255,192,.08);border:1px solid rgba(124,255,192,.35);display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.sc-cta p{font-size:15.5px;line-height:1.45;max-width:30em}
+.sc-cta .b{display:flex;gap:10px;flex-wrap:wrap}
+.sc-cta a.sc-btn{text-decoration:none;display:inline-block}
+@media (max-width:900px){
+  .sc-grid{grid-template-columns:1fr}
+  .sc-full-grid{grid-template-columns:1fr}
+  .sc-gate{position:static;transform:none;width:100%;margin-top:14px}
+  .sc-scan{grid-template-columns:1fr}
+  .sc-phone{display:none}
+}
+@media (prefers-reduced-motion:reduce){.sc-pane.on{animation:none}.sc-phone::after,.sc-steps li.go .d,.sc-tag i{animation:none}}
 </style>
 <noscript><style>.hero.pre [data-fx]{color:inherit}.hero.pre .stage{transform:none!important;opacity:1!important}</style></noscript>
 </head>
@@ -384,13 +493,69 @@ form.f{display:grid;gap:10px;margin-top:16px}
     <h2 data-fx>Already have a website?</h2>
     <a class="btn" href="dashboard.html" data-fx>Log in</a>
   </div>
-  <a class="cue" href="#work">Scroll to land<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></a>
+  <a class="cue" href="#score">Score your site free<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></a>
 </section>
 
 <nav class="nav" id="nav" aria-label="Main">
-  <b>Shiftable</b><a href="#work">Work</a><a href="#edit">Edit it yourself</a><a href="#pricing">Pricing</a><a href="#about">About</a><a class="cta-link" href="#contact">Get started</a>
+  <b>Shiftable</b><a href="#score">Free score</a><a href="#work">Work</a><a href="#edit">Edit it yourself</a><a href="#pricing">Pricing</a><a href="#about">About</a><a class="cta-link" href="#contact">Get started</a>
 </nav>
 <div id="hud" aria-hidden="true"><i></i><span id="hudZone">Orbit</span><span id="hudAlt">400 km</span></div>
+
+<section class="sec" id="score"><div class="wrap sc-grid" id="scGrid">
+  <div>
+    <div data-in="left"><div class="eyebrow">Free website score</div><h2>How good is <span class="hl">your website?</span></h2></div>
+    <p class="lede" data-in="left" style="--d:.1s">Paste your address. In about 30 seconds we check how it runs on a phone, how it shows up on Google, whether it turns visitors into customers, and how it looks. You get a grade out of 100.</p>
+    <form class="sc-form" id="scForm" data-in="left" style="--d:.2s" novalidate>
+      <input id="scUrl" type="text" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" placeholder="yourbusiness.com" aria-label="Your website address" maxlength="300">
+      <button class="sc-btn" id="scGo" type="submit">Score my site</button>
+    </form>
+    <div class="sc-err" id="scErr" role="alert"></div>
+    <p class="sc-note">Free, no account needed. We only look at what any visitor can see.</p>
+  </div>
+
+  <div class="sc-stage glass" id="scStage" data-in="right" style="--d:.15s">
+    <!-- idle: a looping example report so the section is alive before anyone types -->
+    <div class="sc-pane on" id="scDemo">
+      <div class="sc-tag"><i></i>Example report</div>
+      <div class="sc-top"><div class="sc-grade" id="dGrade" style="--gc:#FFD166">C</div>
+        <div><h3>Sample Plumbing Co.</h3><p>This is what a score looks like. Yours takes about 30 seconds.</p><div class="sc-score"><b id="dTotal">0</b> / 100</div></div></div>
+      <div class="sc-cats" id="dCats"></div>
+    </div>
+
+    <div class="sc-pane" id="scScan">
+      <div class="sc-tag"><i></i>Scanning <span id="scHost"></span></div>
+      <div class="sc-scan">
+        <div class="sc-phone" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div><ul class="sc-steps" id="scSteps"></ul><p class="sc-wait">Some sites are slow to open. This can take up to 30 seconds.</p></div>
+      </div>
+    </div>
+
+    <div class="sc-pane" id="scTease">
+      <div class="sc-lock">
+        <div class="sc-top"><div class="sc-grade" id="tGrade">?</div>
+          <div><h3 id="tHead"></h3><p id="tSub"></p></div></div>
+        <div class="sc-blur" id="tBlur" aria-hidden="true"></div>
+        <div class="sc-gate" id="scGate">
+          <h4>Unlock your full report</h4>
+          <p class="s">See every score out of 25, exactly what is wrong, and what to fix first.</p>
+          <form id="scUnlock" novalidate>
+            <input type="text" id="uName" name="name" placeholder="Your name (optional)" autocomplete="name" maxlength="120">
+            <div class="row2">
+              <input type="email" id="uEmail" name="email" placeholder="Email" autocomplete="email" required maxlength="200">
+              <input type="tel" id="uPhone" name="phone" placeholder="Phone" autocomplete="tel" required maxlength="20">
+            </div>
+            <input class="hp" id="uHp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <label class="sc-chk"><input type="checkbox" id="uOk"><span>Send me my results, and it's fine for Shiftable to email or call me about my site. We won't spam you or sell your info.</span></label>
+            <button class="sc-btn" type="submit" id="uGo">Show my full report</button>
+            <div class="sc-err" id="uErr" role="alert" style="margin:0"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="sc-pane" id="scFull"></div>
+  </div>
+</div></section>
 
 <section class="sec" id="work"><div class="wrap">
   <div class="work-head">
@@ -1322,5 +1487,209 @@ void main(){
   });
 })();
 </script>
+<script>
+/* ---------- free website score ---------- */
+(function () {
+  const $ = (q) => document.querySelector(q);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const grid = $('#scGrid'), stage = $('#scStage'), form = $('#scForm'), input = $('#scUrl'), go = $('#scGo'), err = $('#scErr');
+  const panes = { demo: $('#scDemo'), scan: $('#scScan'), tease: $('#scTease'), full: $('#scFull') };
+  let state = 'demo', scan = null, timers = [];
+
+  const GC = { A: '#7CFFC0', B: '#7CFFC0', C: '#FFD166', D: '#FF9A5A', F: '#FF7A8A' };
+  const band = (pct) => (pct < 40 ? 'r' : pct < 65 ? 'a' : '');
+  const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+  const clear = () => { timers.forEach(clearTimeout); timers = []; };
+
+  function show(name) {
+    state = name;
+    Object.keys(panes).forEach((k) => panes[k].classList.toggle('on', k === name));
+    grid.classList.toggle('wide', name === 'full');
+  }
+
+  /* ----- idle: a looping example report ----- */
+  const DEMO = [['Works on a phone', 19], ['Shows up on Google', 14], ['Turns visitors into customers', 9], ['Looks cared for', 21]];
+  $('#dCats').innerHTML = DEMO.map((c, i) => '<div class="sc-cat"><span>' + c[0] + '</span><b id="dn' + i + '">0 / 25</b><i class="sc-meter" id="dm' + i + '"><u></u></i></div>').join('');
+  const ease = (x) => 1 - Math.pow(1 - x, 3);
+  let demoRaf = 0, demoVisible = false, t0 = 0;
+  function demoFrame(now) {
+    demoRaf = 0;
+    if (state !== 'demo' || !demoVisible) return;
+    if (!t0) t0 = now;
+    const cycle = 9000, t = (now - t0) % cycle;
+    let total = 0;
+    DEMO.forEach((c, i) => {
+      const start = i * 450, k = t < start ? 0 : t < start + 1400 ? ease((t - start) / 1400) : t > cycle - 700 ? Math.max(0, (cycle - t) / 700) : 1;
+      const v = Math.round(c[1] * k);
+      total += v;
+      const m = $('#dm' + i);
+      m.firstChild.style.width = (c[1] / 25 * 100 * k) + '%';
+      m.className = 'sc-meter ' + band(c[1] / 25 * 100);
+      $('#dn' + i).textContent = v + ' / 25';
+    });
+    $('#dTotal').textContent = total;
+    demoRaf = requestAnimationFrame(demoFrame);
+  }
+  function demoStart() { if (!demoRaf && !reduce) demoRaf = requestAnimationFrame(demoFrame); }
+  if (reduce) {
+    DEMO.forEach((c, i) => { $('#dm' + i).firstChild.style.width = (c[1] / 25 * 100) + '%'; $('#dm' + i).className = 'sc-meter ' + band(c[1] / 25 * 100); $('#dn' + i).textContent = c[1] + ' / 25'; });
+    $('#dTotal').textContent = 63;
+  }
+  new IntersectionObserver((es) => { demoVisible = es[0].isIntersecting; if (demoVisible) demoStart(); }, { threshold: .1 }).observe(stage);
+
+  /* ----- scanning ----- */
+  const STEPS = ['Opening your site on a phone', 'Timing how fast it loads', 'Checking it works on small screens', 'Reading your page title and headline', 'Checking how Google sees it', 'Looking for your phone number and buttons', 'Estimating how the design looks'];
+  function startScan(host) {
+    $('#scHost').textContent = host;
+    $('#scSteps').innerHTML = STEPS.map((s) => '<li><span class="d"></span>' + esc(s) + '</li>').join('');
+    scan = { i: 0, done: false };
+    const lis = () => [...document.querySelectorAll('#scSteps li')];
+    const tick = () => {
+      const l = lis();
+      if (scan.i < l.length - 1) { if (l[scan.i]) l[scan.i].className = 'ok'; scan.i++; if (l[scan.i]) l[scan.i].className = 'go'; later(tick, 2600); }
+    };
+    lis()[0].className = 'go';
+    later(tick, 2400);
+  }
+  function finishScan() {
+    clear();
+    return new Promise((resolve) => {
+      const l = [...document.querySelectorAll('#scSteps li')];
+      let i = Math.max(0, (scan && scan.i) || 0);
+      const step = () => {
+        if (i < l.length) { l[i].className = 'ok'; i++; if (i < l.length) l[i].className = 'go'; later(step, reduce ? 0 : 170); }
+        else later(resolve, reduce ? 0 : 450);
+      };
+      step();
+    });
+  }
+
+  /* ----- locked teaser ----- */
+  function fakeBlur(cats) {
+    const rows = cats.map((n) => {
+      const w = 25 + Math.floor(Math.random() * 60), v = Math.floor(w / 100 * 25);
+      return '<div class="sc-cat"><span>' + esc(n) + '</span><b>' + v + ' / 25</b><i class="sc-meter ' + band(w) + '"><u style="width:' + w + '%"></u></i></div>';
+    }).join('');
+    const lines = [88, 72, 94, 60, 80].map((w) => '<i style="width:' + w + '%"></i>').join('');
+    return '<div class="sc-cats">' + rows + '</div><div class="sc-fake">' + lines + '</div>';
+  }
+  function cycleGrade(el, final) {
+    const seq = ['F', 'D', 'C', 'B', 'A', 'F', 'C', 'A', 'D', 'B'];
+    if (reduce) { el.textContent = final; el.style.setProperty('--gc', GC[final] || '#fff'); return; }
+    let n = 0;
+    const iv = setInterval(() => {
+      if (n++ < 10) { const g = seq[n - 1]; el.textContent = g; el.style.setProperty('--gc', GC[g]); }
+      else { clearInterval(iv); el.textContent = final; el.style.setProperty('--gc', GC[final] || '#fff'); }
+    }, 85);
+  }
+  function renderTease(d) {
+    scan = Object.assign(scan || {}, { id: d.scan_id, host: d.host });
+    cycleGrade($('#tGrade'), d.grade);
+    const bad = d.grade === 'D' || d.grade === 'F';
+    $('#tHead').textContent = d.host + ' scored a ' + d.grade;
+    $('#tSub').innerHTML = (d.weakest ? 'Biggest gap: <b>' + esc(d.weakest) + '</b>. ' : '') +
+      (d.problems ? '<b>' + d.problems + '</b> problem' + (d.problems === 1 ? '' : 's') + ' found' + (bad ? ' that are likely costing you customers.' : '.') : 'Nothing major found, but there is room to improve.');
+    $('#tBlur').innerHTML = fakeBlur(d.categories || []);
+    $('#uErr').textContent = '';
+    $('#uGo').disabled = false;
+  }
+
+  /* ----- unlocked report ----- */
+  function catCard(c) {
+    const pct = c.score == null ? 0 : Math.round(c.score / c.max * 100);
+    const items = (c.items || []).map((i) => {
+      const mark = i.status === 'pass' ? '✓' : i.status === 'fail' ? '✗' : '–';
+      const pts = i.status === 'skipped' ? 'n/a' : i.max != null && i.earned != null ? i.earned + ' / ' + i.max : '';
+      return '<li class="' + esc(i.status) + '"><span>' + mark + ' ' + esc(i.label) + '</span><span>' + esc(pts) + '</span></li>';
+    }).join('');
+    return '<details class="sc-cardx" open><summary><div class="sc-cat"><span>' + esc(c.name) + (c.estimate ? ' (estimate)' : '') + '</span><b>' + (c.score == null ? 'n/a' : c.score + ' / ' + c.max) +
+      '</b><i class="sc-meter ' + band(pct) + '"><u data-w="' + pct + '"></u></i></div></summary><ul>' + items + '</ul>' +
+      (c.estimate && c.note ? '<p class="sc-est">' + esc(c.note) + '</p>' : '') + '</details>';
+  }
+  function renderFull(d) {
+    const el = panes.full;
+    el.innerHTML =
+      '<div class="sc-top"><div class="sc-grade" id="fGrade"></div><div><h3>' + esc(d.host) + ' scored a ' + esc(d.grade) + '</h3>' +
+      '<div class="sc-score"><b id="fTotal">0</b> / 100 &middot; ' + (d.checked || 0) + ' checks</div></div></div>' +
+      '<div class="sc-full-grid">' + (d.categories || []).map(catCard).join('') + '</div>' +
+      '<div class="sc-h">What to fix first</div>' +
+      ((d.issues || []).length ? '<ul class="sc-issues">' + d.issues.map((i) => '<li><b>' + esc(i.title) + '</b><p>' + esc(i.detail) + '</p></li>').join('') + '</ul>' : '<p class="sc-est">No problems found. Nice work.</p>') +
+      ((d.passes || []).length ? '<div class="sc-h">Already working</div><ul class="sc-ok">' + d.passes.map((p) => '<li>' + esc(p.title) + '</li>').join('') + '</ul>' : '') +
+      '<div class="sc-cta"><p><b>Want this fixed for you?</b> We build a new, fast, phone-ready site for $250, then $50 a month to host and update it.</p>' +
+      '<div class="b"><a class="sc-btn" href="#contact">Talk to us</a><a class="sc-btn ghost" href="#pricing">See pricing</a><button class="sc-btn ghost" type="button" id="fAgain">Score another site</button></div></div>';
+    const g = $('#fGrade'); g.textContent = d.grade; g.style.setProperty('--gc', GC[d.grade] || '#fff');
+    $('#fAgain').addEventListener('click', () => { show('demo'); input.value = ''; input.focus(); demoStart(); document.getElementById('score').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); });
+    const total = $('#fTotal'), target = Number(d.score) || 0;
+    if (reduce) total.textContent = target;
+    else { const s = performance.now(); (function f(n) { const k = Math.min(1, (n - s) / 1100); total.textContent = Math.round(target * ease(k)); if (k < 1) requestAnimationFrame(f); })(s); }
+    requestAnimationFrame(() => requestAnimationFrame(() => el.querySelectorAll('.sc-meter u').forEach((u, i) => {
+      u.style.transition = reduce ? 'none' : 'width 1s cubic-bezier(.16,1,.3,1) ' + (i * 0.12) + 's';
+      u.style.width = u.dataset.w + '%';
+    })));
+  }
+
+  /* ----- network ----- */
+  async function post(path, body, ms) {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms);
+    try {
+      const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+      return data;
+    } catch (e) {
+      throw e.name === 'AbortError' ? new Error('That took too long. Check the address and try again.') : e;
+    } finally { clearTimeout(t); }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (go.disabled) return;
+    const raw = input.value.trim();
+    err.textContent = '';
+    if (!/^(https?:\/\/)?[^\s\/]+\.[^\s\/]{2,}/i.test(raw)) { err.textContent = 'Enter a website address like yourbusiness.com'; input.focus(); return; }
+    go.disabled = true; go.textContent = 'Scanning...';
+    show('scan'); startScan(raw.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0]);
+    try {
+      const data = await post('/api/public-score', { url: raw }, 65000);
+      await finishScan();
+      renderTease(data); show('tease');
+    } catch (ex) {
+      clear(); show('demo'); demoStart(); err.textContent = ex.message;
+    }
+    go.disabled = false; go.textContent = 'Score my site';
+  });
+
+  $('#uPhone').addEventListener('input', (e) => {
+    let d = e.target.value.replace(/\D/g, '');
+    if (d.length === 11 && d[0] === '1') d = d.slice(1);
+    d = d.slice(0, 10);
+    e.target.value = d.length > 6 ? '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6) : d.length > 3 ? '(' + d.slice(0, 3) + ') ' + d.slice(3) : d;
+  });
+  $('#scUnlock').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const uErr = $('#uErr'), btn = $('#uGo');
+    const email = $('#uEmail').value.trim(), phone = $('#uPhone').value, digits = phone.replace(/\D/g, '');
+    uErr.textContent = '';
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email)) { uErr.textContent = 'Enter a valid email address.'; return; }
+    if (digits.length < 10) { uErr.textContent = 'Enter your 10-digit phone number.'; return; }
+    if (!$('#uOk').checked) { uErr.textContent = 'Please tick the box so we can send your results.'; return; }
+    if (!scan || !scan.id) { uErr.textContent = 'Score your site first.'; return; }
+    btn.disabled = true; btn.textContent = 'Unlocking...';
+    try {
+      const d = await post('/api/public-unlock', { scan_id: scan.id, name: $('#uName').value, email, phone, consent: true, website: $('#uHp').value }, 20000);
+      renderFull(d); show('full');
+      document.getElementById('score').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
+    } catch (ex) { uErr.textContent = ex.message; btn.disabled = false; btn.textContent = 'Show my full report'; }
+  });
+
+  /* ?site=example.com in a link (e.g. from an email) pre-fills the box and scrolls here. It never runs a scan by itself. */
+  try {
+    const p = new URLSearchParams(location.search).get('site');
+    if (p) { input.value = p.slice(0, 300); setTimeout(() => document.getElementById('score').scrollIntoView(), 400); }
+  } catch (e) { /* ignore */ }
+})();
+</script>
+
 </body>
 </html>
