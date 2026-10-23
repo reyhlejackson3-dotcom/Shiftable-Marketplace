@@ -3,7 +3,14 @@
 const { rest, requireAdmin, readBody, fail, LIST_COLUMNS } = require('./_lib/supa');
 const { fetchHtml } = require('./_lib/http');
 const { findBestEmail } = require('./_lib/emails');
-const { analyzeHtml, buildReport, runPageSpeed } = require('./_lib/score');
+const { analyzeHtml, buildReport, runPageSpeed, takeScreenshot, siteExtras, cityFromAddress } = require('./_lib/score');
+// If design.js is missing from a deploy, scoring still works and Design shows n/a, instead of the whole endpoint crashing.
+let judgeDesign = async () => null;
+try {
+  ({ judgeDesign } = require('./_lib/design'));
+} catch (e) {
+  console.error('api/_lib/design.js could not be loaded:', e && e.message);
+}
 const { isSafePublicHost, normalizeUrl } = require('./_lib/url');
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -18,7 +25,7 @@ module.exports = async (req, res) => {
     const id = String(readBody(req).id || '');
     if (!UUID.test(id)) return res.status(400).json({ error: 'Missing or invalid id' });
 
-    const found = await rest(`outreach_leads?id=eq.${id}&select=id,website,email`);
+    const found = await rest(`outreach_leads?id=eq.${id}&select=id,website,email,address`);
     const lead = found && found[0];
     if (!lead) return res.status(404).json({ error: 'Lead not found' });
 
@@ -38,17 +45,19 @@ module.exports = async (req, res) => {
     }
 
     try {
-      // PageSpeed and the homepage/email lookup run at the same time.
+      // PageSpeed, the homepage + email lookup, and the robots.txt/sitemap checks all run at the same time.
       const pageWork = fetchHtml(url).then(async (page) => {
         const email = lead.email ? null : await findBestEmail(page ? page.url : url, page ? page.html : null);
         return { page, email };
       });
-      const [psi, work] = await Promise.all([runPageSpeed(url), pageWork]);
+      const [psi, work, extras] = await Promise.all([runPageSpeed(url), pageWork, siteExtras(url)]);
+      const design = await judgeDesign(takeScreenshot(psi));
       const page = work.page;
       const email = work.email;
 
+      const city = cityFromAddress(lead.address);
       const finalUrl = (page && page.url) || psi.finalUrl || url;
-      const { score, report } = buildReport(psi, page ? analyzeHtml(page.html) : null, finalUrl);
+      const { score, report } = buildReport(psi, page ? analyzeHtml(page.html, city) : null, finalUrl, { ...extras, city, design });
 
       return save({
         score,
