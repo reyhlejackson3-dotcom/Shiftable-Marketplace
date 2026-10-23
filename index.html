@@ -1605,13 +1605,14 @@ void main(){
     }).join('');
     return '<details class="sc-cardx" open><summary><div class="sc-cat"><span>' + esc(c.name) + (c.estimate ? ' (estimate)' : '') + '</span><b>' + (c.score == null ? 'n/a' : c.score + ' / ' + c.max) +
       '</b><i class="sc-meter ' + band(pct) + '"><u data-w="' + pct + '"></u></i></div></summary><ul>' + items + '</ul>' +
-      (c.estimate && c.note ? '<p class="sc-est">' + esc(c.note) + '</p>' : '') + '</details>';
+      (c.note ? '<p class="sc-est">' + esc(c.note) + '</p>' : '') + '</details>';
   }
   function renderFull(d) {
     const el = panes.full;
     el.innerHTML =
       '<div class="sc-top"><div class="sc-grade" id="fGrade"></div><div><h3>' + esc(d.host) + ' scored a ' + esc(d.grade) + '</h3>' +
       '<div class="sc-score"><b id="fTotal">0</b> / 100 &middot; ' + (d.checked || 0) + ' checks</div></div></div>' +
+      (d.partial ? '<p class="sc-est" style="margin:-4px 0 16px">Google\'s speed test could not open this site, so speed and design are left out of this score.</p>' : '') +
       '<div class="sc-full-grid">' + (d.categories || []).map(catCard).join('') + '</div>' +
       '<div class="sc-h">What to fix first</div>' +
       ((d.issues || []).length ? '<ul class="sc-issues">' + d.issues.map((i) => '<li><b>' + esc(i.title) + '</b><p>' + esc(i.detail) + '</p></li>').join('') + '</ul>' : '<p class="sc-est">No problems found. Nice work.</p>') +
