@@ -1,58 +1,71 @@
 'use strict';
 
-const { rest, requireAdmin, readBody, fail } = require('./_lib/supa');
-const { searchPlaces } = require('./_lib/places');
-const { isThirdPartyProfile, normalizeUrl } = require('./_lib/url');
+const { rest, requireAdmin, readBody, fail, LIST_COLUMNS } = require('./_lib/supa');
+const { fetchHtml } = require('./_lib/http');
+const { findBestEmail } = require('./_lib/emails');
+const { analyzeHtml, buildReport, runPageSpeed, takeScreenshot, siteExtras, cityFromAddress } = require('./_lib/score');
+const { judgeDesign } = require('./_lib/design');
+const { isSafePublicHost, normalizeUrl } = require('./_lib/url');
 
-// POST { type, city } -> finds businesses on Google Maps and saves new ones as leads.
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// POST { id } -> scores ONE lead. PageSpeed alone takes 10-30s, so the leads page loops over
+// leads and calls this once per lead instead of doing a big batch inside a single function.
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
     await requireAdmin(req);
 
-    const body = readBody(req);
-    const type = String(body.type || '').trim();
-    const city = String(body.city || '').trim();
-    if (!type || !city || type.length > 80 || city.length > 80) {
-      return res.status(400).json({ error: 'Enter a business type and a city.' });
-    }
+    const id = String(readBody(req).id || '');
+    if (!UUID.test(id)) return res.status(400).json({ error: 'Missing or invalid id' });
 
-    const query = `${type} in ${city}`;
-    const places = await searchPlaces(query, 3);
+    const found = await rest(`outreach_leads?id=eq.${id}&select=id,website,email,address`);
+    const lead = found && found[0];
+    if (!lead) return res.status(404).json({ error: 'Lead not found' });
 
-    const byPlace = new Map();
-    for (const p of places) {
-      const site = p.website ? normalizeUrl(p.website) : null;
-      const hasRealSite = !!site && !isThirdPartyProfile(site);
-      byPlace.set(p.place_id, {
-        place_id: p.place_id,
-        name: p.name,
-        address: p.address,
-        phone: p.phone,
-        website: site,
-        rating: p.rating,
-        review_count: p.review_count,
-        query,
-        score_status: hasRealSite ? 'pending' : 'no_website',
+    const save = async (patch) => {
+      const rows = await rest(`outreach_leads?id=eq.${id}&select=${LIST_COLUMNS}`, {
+        method: 'PATCH',
+        body: patch,
+        prefer: 'return=representation',
       });
+      return res.status(200).json({ lead: rows && rows[0] });
+    };
+
+    const url = lead.website ? normalizeUrl(lead.website) : null;
+    if (!url) return save({ score_status: 'no_website', score_error: null });
+    if (!isSafePublicHost(url)) {
+      return save({ score_status: 'error', score_error: "Website address isn't a public site" });
     }
-    const rows = [...byPlace.values()];
-    if (!rows.length) return res.status(200).json({ found: 0, added: 0, noWebsite: 0 });
 
-    // ignore-duplicates: re-running a search never overwrites scores or statuses you already have.
-    // The response contains only the rows that were actually new.
-    const inserted = await rest('outreach_leads?on_conflict=place_id&select=id,score_status', {
-      method: 'POST',
-      body: rows,
-      prefer: 'resolution=ignore-duplicates,return=representation',
-    });
-    const added = inserted || [];
+    try {
+      // PageSpeed, the homepage + email lookup, and the robots.txt/sitemap checks all run at the same time.
+      const pageWork = fetchHtml(url).then(async (page) => {
+        const email = lead.email ? null : await findBestEmail(page ? page.url : url, page ? page.html : null);
+        return { page, email };
+      });
+      const [psi, work, extras] = await Promise.all([runPageSpeed(url), pageWork, siteExtras(url)]);
+      const design = await judgeDesign(takeScreenshot(psi));
+      const page = work.page;
+      const email = work.email;
 
-    res.status(200).json({
-      found: rows.length,
-      added: added.length,
-      noWebsite: added.filter((r) => r.score_status === 'no_website').length,
-    });
+      const city = cityFromAddress(lead.address);
+      const finalUrl = (page && page.url) || psi.finalUrl || url;
+      const { score, report } = buildReport(psi, page ? analyzeHtml(page.html, city) : null, finalUrl, { ...extras, city, design });
+
+      return save({
+        score,
+        score_status: 'scored',
+        score_error: null,
+        report,
+        scored_at: new Date().toISOString(),
+        ...(email ? { email: email.email, email_source: email.source } : {}),
+      });
+    } catch (e) {
+      // A site that fails to score is recorded on the lead so it can be retried; it isn't a server error.
+      const message = (e && e.message) || 'Scoring failed';
+      return save({ score_status: 'error', score_error: message.slice(0, 300) });
+    }
   } catch (e) {
     fail(res, e);
   }
