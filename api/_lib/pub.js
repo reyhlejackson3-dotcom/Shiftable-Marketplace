@@ -41,6 +41,7 @@ function fullReport(row) {
     issues: r.issues || [],
     passes: r.passes || [],
     checked: r.checked || 0,
+    partial: !!r.partial,
   };
 }
 
